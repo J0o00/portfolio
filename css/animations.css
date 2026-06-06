@@ -1,0 +1,289 @@
+/**
+ * css/animations.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Composite-Only Animation Rules
+ *
+ * Engineering constraints enforced here:
+ *  1. ONLY `transform` and `opacity` are animated — these are the two
+ *     properties that the browser compositor can handle entirely on the GPU
+ *     thread, causing zero layout or paint work.
+ *  2. `will-change` is NOT set globally. It is applied dynamically by JS
+ *     on pointerenter and removed after the spring settles to prevent GPU
+ *     memory bloat from layers that are idle.
+ *  3. All timing functions use cubic-bezier or steps() — no ease-in-out
+ *     shortcuts that the browser has to look up.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ══════════════════════════════════════════════════════════
+   1. TILT CARD — Base + Glare Container
+   ══════════════════════════════════════════════════════════ */
+
+.project-card {
+    /* Create a new stacking context for the glare clip */
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    /* transform & will-change managed entirely by tilt.js */
+}
+
+/**
+ * Glare clip container — sits on top of all card content.
+ * overflow:hidden clips the 200%-sized inner div.
+ * pointer-events:none lets clicks pass through.
+ */
+.tilt-glare {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 10;
+}
+
+/**
+ * Glare inner div — 200% × 200% so it always covers the card
+ * regardless of tilt offset. Positioned at -50%/-50% so its
+ * centre aligns with the card centre at rest.
+ *
+ * JS animates translate3d(x, y, 0) — GPU composited, zero paint.
+ * The gradient is a radial highlight simulating specular reflection.
+ */
+.tilt-glare-inner {
+    position: absolute;
+    top:  -50%;
+    left: -50%;
+    width:  200%;
+    height: 200%;
+    background: radial-gradient(
+        circle at 50% 50%,
+        rgba(230, 106, 44, 0.25) 0%,
+        rgba(230, 106, 44, 0.08) 35%,
+        transparent              65%
+    );
+    /* transform and opacity written by JS — no transition here to avoid
+       fighting the spring physics loop */
+    opacity: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   2. MAGNETIC BUTTONS
+   ══════════════════════════════════════════════════════════ */
+
+/**
+ * [data-magnetic] — outer shell transforms towards cursor (PULL_BODY factor).
+ * .mag-label      — inner text transforms slightly more (PULL_TEXT factor)
+ *                   creating a parallax depth illusion.
+ *
+ * NO transition here — spring physics in magnetic.js handles all easing.
+ * Adding a CSS transition would cause a double-animation conflict.
+ */
+[data-magnetic] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    /**
+     * No CSS transition here — spring physics in magnetic.js owns all easing.
+     * A CSS transition would double-animate and fight the spring, causing jitter.
+     * transform and will-change are written/removed dynamically by JS.
+     */
+}
+
+[data-magnetic] .mag-label {
+    /**
+     * CRITICAL: display:contents makes the element generate no rendering box,
+     * so transform has ZERO effect — the parallax illusion never shows.
+     * display:inline-block gives it a real box while preserving inline flow.
+     * vertical-align:middle prevents a baseline shift on text-only buttons.
+     */
+    display: inline-block;
+    vertical-align: middle;
+    position: relative; /* establish stacking context for z-index if needed */
+    /* transform written by magnetic.js — no CSS transition (spring handles easing) */
+}
+
+/* ══════════════════════════════════════════════════════════
+   3. TIMELINE SCROLL-SKEW
+   ══════════════════════════════════════════════════════════ */
+
+/**
+ * .timeline-item receives a CSS custom property --skew
+ * written by the scroll velocity observer (interactions.js).
+ * Using a custom property lets us update it without touching
+ * the style attribute per item — one write per frame.
+ */
+.timeline-item {
+    --skew: 0deg;
+    transform: skewX(var(--skew)) translateY(0);
+    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* When the scroll velocity skew is active, remove transition so
+   it tracks instantly, then re-add it for the settle */
+.timeline-item.skewing {
+    transition: none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   4. SCROLL PROGRESS BAR
+   ══════════════════════════════════════════════════════════ */
+
+#scroll-progress {
+    position: fixed;
+    top:  0;
+    left: 0;
+    height: 2px;
+    width:  0%;
+    /* Gradient animates width — width is not composited.
+       Acceptable trade-off: only 2px of paint per frame.
+       Alternative (clip-path) would be more complex for minimal gain. */
+    background: linear-gradient(
+        90deg,
+        #FF5722 0%,
+        #FF7043 50%,
+        #FF3D00 100%
+    );
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(255, 87, 34, 0.7);
+    /* width written by JS via rAF — no CSS transition to avoid lag */
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. STAGGERED CHILD REVEAL
+   ══════════════════════════════════════════════════════════ */
+
+/**
+ * Elements start invisible and shifted down.
+ * JS adds .child-visible via IntersectionObserver with staggered delays.
+ * Only transform + opacity → compositor-only.
+ */
+.project-card,
+.phil-card,
+.loop-node,
+.timeline-item,
+.metric-item,
+.research-card {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+        opacity   0.55s cubic-bezier(0.25, 1, 0.5, 1),
+        transform 0.55s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.child-visible {
+    opacity: 1 !important;
+    transform: translateY(0);
+}
+
+.timeline-item.child-visible {
+    transform: skewX(var(--skew)) translateY(0);
+}
+
+/* ══════════════════════════════════════════════════════════
+   6. TIMELINE DOT PULSE
+   ══════════════════════════════════════════════════════════ */
+
+.timeline-dot {
+    position: relative;
+}
+
+/* Ping ring — scale + opacity = composite only */
+.timeline-dot::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 1px solid #FF5722;
+    opacity: 0;
+    animation: dotPing 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes dotPing {
+    0%   { transform: scale(0.85); opacity: 0.7; }
+    75%  { transform: scale(2.2);  opacity: 0;   }
+    100% { transform: scale(2.2);  opacity: 0;   }
+}
+
+/* ══════════════════════════════════════════════════════════
+   7. SECTION LABEL — animated underline on scroll-reveal
+   ══════════════════════════════════════════════════════════ */
+
+.section-label {
+    position: relative;
+    display: inline-block;
+}
+
+/* Width animated on .visible — width is NOT composited but the element
+   is small (~80px) so the repaint cost is negligible */
+.section-label::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #FF5722;
+    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.fade-in.visible .section-label::after {
+    width: 100%;
+}
+
+/* ══════════════════════════════════════════════════════════
+   8. PREFERS-REDUCED-MOTION — Global Override
+   ══════════════════════════════════════════════════════════ */
+
+/**
+ * When the OS requests reduced motion:
+ *  - Kill ALL transitions and animations at the CSS level as a safety net.
+ *  - JS modules also check motionPrefs.reduced and skip rAF loops.
+ *  - This CSS rule is the last line of defence for any animation that JS
+ *    might miss or fire before the motionPrefs check runs.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration:        0.01ms !important;
+        animation-iteration-count: 1      !important;
+        transition-duration:       0.01ms !important;
+        scroll-behavior:           auto   !important;
+    }
+
+    .tilt-glare,
+    .tilt-glare-inner,
+    .timeline-dot::after {
+        display: none;
+    }
+
+    .project-card,
+    .phil-card,
+    .skill-category,
+    .timeline-item,
+    .metric-item,
+    .research-card {
+        opacity: 1;
+        transform: none;
+    }
+
+    [data-magnetic] {
+        transform: none !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════
+   9. MOBILE — disable GPU-intensive effects
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .project-card {
+        transform: none !important;
+    }
+    .tilt-glare       { display: none; }
+    #skills-canvas-wrapper { height: 260px; }
+    [data-magnetic]   { transform: none !important; }
+}
