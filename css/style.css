@@ -2158,6 +2158,11 @@ html.theme-transition *::after {
 [data-theme="light"] .modal-body {
   color: var(--text-body);
 }
+
+/* Mobile Menu */
+[data-theme="light"] .mobile-menu-overlay {
+  background: rgba(248, 250, 252, 0.98);
+}
 [data-theme="light"] .modal-body h3 {
   color: var(--text-heading);
 }
