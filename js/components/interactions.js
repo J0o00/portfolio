@@ -145,7 +145,7 @@ export function initModalTransitions() {
 // ─── 4. STAGGERED SECTION CHILD REVEAL ──────────────────────────────────────
 export function initStaggeredReveal() {
     const CHILD_SELECTORS =
-        '.project-card, .phil-card, .loop-node, .timeline-item, .metric-item, .research-card';
+        '.project-card, .phil-card, .loop-node, .timeline-item, .metric-item, .research-card, .nvidia-card';
 
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
