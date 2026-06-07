@@ -1,112 +1,103 @@
 /**
- * Theme Toggle & Context-Aware System Utility
- * Handles dynamic greetings, time-based themes, and the segmented control (Auto, Light, Dark).
+ * js/utils/theme.js
+ * ─────────────────────────────────────────────────────────────────────────────
+ * 3-Way Theme System: Dark | Light | System (Auto)
+ *
+ * Modes:
+ *   "dark"   → always [data-theme="dark"]
+ *   "light"  → always [data-theme="light"]
+ *   "auto"   → reads prefers-color-scheme, maps to dark|light
+ *
+ * The blocking IIFE in <head> uses the same logic to prevent FOUC.
+ * This module handles the UI toggle and listens for system preference changes.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 export function initThemeSystem() {
     const segments = document.querySelectorAll('.theme-segmented-control .segment');
     if (!segments.length) return;
 
-    // Run every minute to keep greeting accurate if page is left open
-    setInterval(updateContextAwareState, 60000);
+    // Initial sync
+    applyTheme();
 
-    // Initial update
-    updateContextAwareState();
-
+    // Segment click handler
     segments.forEach(segment => {
         segment.addEventListener('click', () => {
             const mode = segment.getAttribute('data-mode');
             localStorage.setItem('theme_mode', mode);
-            
+
             document.documentElement.classList.add('theme-transition');
-            updateContextAwareState();
-            
+            applyTheme();
+
             setTimeout(() => {
                 document.documentElement.classList.remove('theme-transition');
-            }, 400);
+            }, 350);
         });
     });
+
+    // React to OS-level preference changes (e.g. user switches system dark/light)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        const savedMode = localStorage.getItem('theme_mode') || 'auto';
+        if (savedMode === 'auto') applyTheme();
+    });
 }
 
-export function updateContextAwareState() {
+/**
+ * applyTheme()
+ * Reads localStorage → applies [data-theme] → updates segment active states
+ * and dispatches "themeChanged" for background canvas to update colors.
+ */
+export function applyTheme() {
     const savedMode = localStorage.getItem('theme_mode') || 'auto';
-    const hour = new Date().getHours();
-    
-    let themeClass = 'morning';
-    let greeting = 'Good Morning,';
+    const resolvedTheme = resolveTheme(savedMode);
 
-    if (savedMode === 'dark') {
-        themeClass = 'dark';
-        if (hour >= 5 && hour < 12) greeting = 'Good <span class="accent">Morning,</span>';
-        else if (hour >= 12 && hour < 17) greeting = 'Good <span class="accent">Afternoon,</span>';
-        else if (hour >= 17 && hour < 21) greeting = 'Good <span class="accent">Evening,</span>';
-        else greeting = 'Good <span class="accent">Night,</span>';
-    } else if (savedMode === 'light') {
-        if (hour >= 5 && hour < 12) {
-            themeClass = 'morning';
-            greeting = 'Good <span class="accent">Morning,</span>';
-        } else if (hour >= 12 && hour < 17) {
-            themeClass = 'afternoon';
-            greeting = 'Good <span class="accent">Afternoon,</span>';
-        } else if (hour >= 17 && hour < 21) {
-            themeClass = 'evening';
-            greeting = 'Good <span class="accent">Evening,</span>';
-        } else {
-            themeClass = 'afternoon'; // Default light fallback for night
-            greeting = 'Good <span class="accent">Night,</span>';
-        }
-    } else {
-        // Auto
-        if (hour >= 5 && hour < 12) {
-            themeClass = 'morning';
-            greeting = 'Good <span class="accent">Morning,</span>';
-        } else if (hour >= 12 && hour < 17) {
-            themeClass = 'afternoon';
-            greeting = 'Good <span class="accent">Afternoon,</span>';
-        } else if (hour >= 17 && hour < 21) {
-            themeClass = 'evening';
-            greeting = 'Good <span class="accent">Evening,</span>';
-        } else {
-            themeClass = 'dark';
-            greeting = 'Good <span class="accent">Night,</span>';
-        }
-    }
+    // Apply to <html>
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
 
-    // Update DOM Theme Attribute
-    if (themeClass === 'morning') {
-        document.documentElement.removeAttribute('data-theme');
-    } else {
-        document.documentElement.setAttribute('data-theme', themeClass);
-    }
+    // Update greeting text to reflect time of day (informational, no visual effect)
+    updateGreeting();
 
-    // Update Greeting
-    const greetingEl = document.getElementById('greeting-text');
-    if (greetingEl) {
-        greetingEl.innerHTML = greeting;
-    }
-
-    // Update Context Badge
+    // Hide context badge — it was used for time-of-day mood (no longer relevant)
     const contextBadge = document.getElementById('context-subtitle');
-    if (contextBadge) {
-        if (savedMode === 'auto') {
-            contextBadge.style.display = 'inline-block';
-        } else {
-            contextBadge.style.display = 'none';
-        }
-    }
+    if (contextBadge) contextBadge.style.display = 'none';
 
-    // Update Segment Active State
+    // Update segment active indicator
     const segments = document.querySelectorAll('.theme-segmented-control .segment');
     segments.forEach(seg => {
-        if (seg.getAttribute('data-mode') === savedMode) {
-            seg.classList.add('active');
-        } else {
-            seg.classList.remove('active');
-        }
+        seg.classList.toggle('active', seg.getAttribute('data-mode') === savedMode);
     });
 
-    // Dispatch event for canvas/background components to update their colors
-    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: themeClass } }));
+    // Notify canvas / other components
+    window.dispatchEvent(new CustomEvent('themeChanged', {
+        detail: { theme: resolvedTheme, mode: savedMode }
+    }));
 }
 
+/**
+ * resolveTheme(mode) → "dark" | "light"
+ * Maps the stored mode preference to a concrete theme value.
+ */
+export function resolveTheme(mode) {
+    if (mode === 'dark') return 'dark';
+    if (mode === 'light') return 'light';
+    // auto: read system preference
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+/**
+ * updateGreeting()
+ * Updates the greeting text element based on local time.
+ * This is purely informational — no theme logic attached.
+ */
+function updateGreeting() {
+    const greetingEl = document.getElementById('greeting-text');
+    if (!greetingEl) return;
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12)       greetingEl.textContent = 'Good Morning,';
+    else if (hour >= 12 && hour < 17) greetingEl.textContent = 'Good Afternoon,';
+    else if (hour >= 17 && hour < 21) greetingEl.textContent = 'Good Evening,';
+    else                               greetingEl.textContent = 'Good Night,';
+}
+
+// Auto-init on DOM ready
 document.addEventListener('DOMContentLoaded', initThemeSystem);

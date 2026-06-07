@@ -3,744 +3,942 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jovial Joyson | EEE Engineer | Patent Contributor</title>
-    <meta name="description" content="Jovial Joyson — B.Tech EEE student at Christ College of Engineering specialising in power electronics, EV systems, embedded control, and industrial automation. Patent contributor, Siemens intern.">
-    
-    <!-- Google Analytics Placeholder -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXXXXX');
-    </script>
+    <title>Jovial Joyson | EEE Engineer | Power Electronics · Embedded Systems · Digital Twins</title>
+    <meta name="description" content="Jovial Joyson — B.Tech EEE student specialising in power electronics, embedded control, industrial automation, and digital twin systems. Patent holder. Siemens intern.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
-    <!-- Composite-only animation rules: tilt-glare, magnetic buttons, timeline skew, scroll progress -->
     <link rel="stylesheet" href="./css/animations.css">
-    
+
+    <!-- Blocking theme init — prevents FOUC -->
     <script>
         (function() {
-            const savedMode = localStorage.getItem('theme_mode') || 'auto'; // auto, light, dark
-            const hour = new Date().getHours();
-            let theme = 'morning';
-            
-            if (savedMode === 'dark') {
+            // Must match resolveTheme() in theme.js exactly
+            var saved = localStorage.getItem('theme_mode') || 'auto';
+            var theme;
+            if (saved === 'dark') {
                 theme = 'dark';
-            } else if (savedMode === 'light') {
-                // Determine which light theme based on time
-                if (hour >= 5 && hour < 12) theme = 'morning';
-                else if (hour >= 12 && hour < 17) theme = 'afternoon';
-                else if (hour >= 17 && hour < 21) theme = 'evening';
-                else theme = 'afternoon'; // fallback default for light
+            } else if (saved === 'light') {
+                theme = 'light';
             } else {
-                // Auto
-                if (hour >= 5 && hour < 12) theme = 'morning';
-                else if (hour >= 12 && hour < 17) theme = 'afternoon';
-                else if (hour >= 17 && hour < 21) theme = 'evening';
-                else theme = 'dark';
+                // auto: respect system preference
+                theme = window.matchMedia('(prefers-color-scheme: light)').matches
+                    ? 'light'
+                    : 'dark';
             }
-
-            if (theme !== 'morning') { // morning is base
-                document.documentElement.setAttribute('data-theme', theme);
-            }
+            document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
 </head>
 <body>
-    <canvas id="bg-canvas"></canvas>
 
-    <header class="nav-wrapper">
-        <nav class="glass-nav">
-            <div class="logo">JJ</div>
-            <div class="nav-links" id="main-nav">
-                <a href="#about">About</a>
-                <a href="#research">Research</a>
-                <a href="#featured">Work</a>
-                <a href="#philosophy">Philosophy</a>
-                <a href="#contact">Contact</a>
+<canvas id="bg-canvas"></canvas>
+
+<!-- ─── NAVBAR ─────────────────────────────────────────── -->
+<header class="nav-wrapper">
+    <nav class="glass-nav" role="navigation" aria-label="Main navigation">
+        <div class="logo">JJ</div>
+        <div class="nav-links" id="main-nav">
+            <a href="#about">About</a>
+            <a href="#research">Research</a>
+            <a href="#featured">Work</a>
+            <a href="#experience">Experience</a>
+            <a href="#contact">Contact</a>
+        </div>
+        <div class="nav-actions">
+            <a href="/resume.pdf" class="resume-btn" target="_blank" rel="noopener">Resume</a>
+            <div class="theme-segmented-control" id="theme-toggle" aria-label="Theme selector">
+                <button class="segment" data-mode="dark">Dark</button>
+                <button class="segment" data-mode="light">Light</button>
+                <button class="segment" data-mode="auto">System</button>
             </div>
-            <div class="nav-actions">
-                <a href="/resume.pdf" class="resume-btn" target="_blank">Resume</a>
-                <div class="theme-segmented-control" id="theme-toggle">
-                    <button class="segment" data-mode="auto">Auto</button>
-                    <button class="segment" data-mode="light">☀</button>
-                    <button class="segment" data-mode="dark">🌙</button>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<!-- Mobile full-screen nav -->
+<div class="mobile-menu-overlay" id="mobile-menu" role="dialog" aria-modal="true">
+    <a href="#about" class="mobile-nav-link">About</a>
+    <a href="#research" class="mobile-nav-link">Research</a>
+    <a href="#featured" class="mobile-nav-link">Work</a>
+    <a href="#experience" class="mobile-nav-link">Experience</a>
+    <a href="#contact" class="mobile-nav-link">Contact</a>
+    <a href="/resume.pdf" class="btn-primary" target="_blank">Download Resume</a>
+</div>
+
+<main>
+
+<!-- ─── HERO ───────────────────────────────────────────── -->
+<section id="hero" class="container" aria-labelledby="hero-name">
+    <div class="hero-content">
+        <p class="overline mb-sm"><span id="greeting-text">Good Morning,</span></p>
+
+        <h1 class="hero-name" id="hero-name">JOVIAL<br>JOYSON</h1>
+
+        <h2 class="hero-subtitle">Electrical &amp; Electronics Engineer</h2>
+
+        <p id="context-subtitle" class="context-badge mb-md">
+            ◎ Context-Aware Ambient Light Active
+        </p>
+
+        <p class="hero-statement">
+            Designing fault-tolerant control systems —<br>
+            from motor-level sensing to system-level intelligence.
+        </p>
+
+        <div class="glass-chips" role="list" aria-label="Engineering domains">
+            <span class="glass-chip domain-power"      role="listitem" data-domain="power">Power Electronics</span>
+            <span class="glass-chip domain-embedded"   role="listitem" data-domain="embedded">Embedded Systems</span>
+            <span class="glass-chip domain-industrial" role="listitem" data-domain="industrial">Industrial Automation</span>
+            <span class="glass-chip domain-digital"    role="listitem" data-domain="digital-twins">Digital Twins</span>
+        </div>
+
+        <div class="hero-cta">
+            <a href="#research" class="btn-primary">View Research</a>
+            <a href="/resume.pdf" class="btn-glass" target="_blank" rel="noopener">Download CV</a>
+        </div>
+
+        <!-- Credential Strip: verified facts only -->
+        <div class="credential-strip" aria-label="Engineering credentials">
+            <div class="credential-item cred-patent">
+                <span class="credential-dot"></span>
+                Indian Patent Filed (202641051670)
+            </div>
+            <div class="credential-item cred-siemens">
+                <span class="credential-dot"></span>
+                Siemens TIA Portal Certified
+            </div>
+            <div class="credential-item cred-ebaja">
+                <span class="credential-dot"></span>
+                eBAJA EV Competition 2025
+            </div>
+            <div class="credential-item cred-iit">
+                <span class="credential-dot"></span>
+                IIT Madras Pravartak Certified
+            </div>
+            <div class="credential-item cred-hackathon">
+                <span class="credential-dot"></span>
+                BeachHack H4C — 1st Place
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-visual" id="hero-parallax-target" aria-hidden="true">
+        <div class="profile-container" id="profile-aura">
+            <img src="/profile.jpg" alt="Jovial Joyson — Electrical & Electronics Engineer"
+                 class="profile-image"
+                 onerror="this.style.display='none'">
+        </div>
+    </div>
+</section>
+
+<!-- ─── METRICS BAR ────────────────────────────────────── -->
+<section id="metrics" class="metrics-bar container fade-in" style="--stagger:0" aria-label="Engineering credentials">
+    <div class="metric-item">
+        <span class="metric-number" data-target="1">0</span>
+        <span class="metric-label">Indian Patent Filed</span>
+    </div>
+    <div class="metric-item">
+        <span class="metric-number" data-target="2">0</span>
+        <span class="metric-label">Industry Internships</span>
+    </div>
+    <div class="metric-item">
+        <span class="metric-number" data-target="5">0</span>
+        <span class="metric-label">Hardware Systems Built</span>
+    </div>
+    <div class="metric-item">
+        <span class="metric-number" data-target="3">0</span>
+        <span class="metric-label">Competition Awards</span>
+    </div>
+</section>
+
+<!-- ─── RESEARCH & INNOVATION ──────────────────────────── -->
+<section id="research" class="container fade-in" style="--stagger:1" aria-labelledby="research-title">
+    <span class="section-label">Intellectual Contribution</span>
+    <h2 class="section-title" id="research-title">Research &amp; Innovation</h2>
+
+    <div class="research-grid">
+
+        <!-- Patent Platform Card -->
+        <div class="patent-card">
+            <div class="mb-sm">
+                <span class="status-badge status-research">Patent App: 202641051670</span>
+            </div>
+            <h3 style="font-size: clamp(1.3rem,3vw,1.8rem); margin-bottom: 0.75rem; color: var(--text-heading);">
+                Context-Aware Digital Triplet System
+            </h3>
+            <p style="max-width:760px; margin-bottom: 2rem;">
+                A three-layer "triplet" architecture that closes the loop between physical state, virtual model, 
+                and real-time control. Eliminates the read-only limitation of conventional digital twins by 
+                integrating direct actuation pathways — preempting thermal runaway in heavy industrial drives 
+                and EV powertrains before failure occurs.
+            </p>
+
+            <!-- Horizontal Architecture Flow -->
+            <div class="patent-flow-horizontal" role="list" aria-label="System architecture stages">
+
+                <div class="patent-stage" role="listitem">
+                    <h4 style="color: var(--domain-power);">Sensors</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Physical layer</p>
+                    <div class="patent-hover-info">
+                        <strong>Physical Sensors</strong>
+                        <p>Embedded stator thermocouples and hall-effect current sensors capturing raw physical state at high frequency.</p>
+                    </div>
                 </div>
-                <button class="hamburger" id="hamburger" aria-label="Toggle menu">
-                    <span></span><span></span><span></span>
-                </button>
-            </div>
-        </nav>
-    </header>
 
-    <main>
-        <section id="hero" class="split-layout container">
-            <div class="hero-content">
-                <h1 class="dynamic-greeting"><span id="greeting-text">Good Morning,</span><br>I'm Jovial Joyson</h1>
-                <h2>Electrical &amp; Electronics Engineer</h2>
-                <p id="context-subtitle" class="tech-badge context-badge">Context-Aware Theme Active</p>
-                <p class="hero-statement">
-                    Designing fault-tolerant control systems<br>
-                    from motor-level sensing to system-level intelligence
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem">
+                    <h4>Edge</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Processing layer</p>
+                    <div class="patent-hover-info">
+                        <strong>Edge Processing</strong>
+                        <p>High-frequency ADC sampling, noise filtering, and feature extraction running locally on embedded hardware.</p>
+                    </div>
+                </div>
+
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem" style="border-color: rgba(139,92,246,0.35);">
+                    <h4 style="color: var(--domain-digital);">Triplet</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Virtual model</p>
+                    <div class="patent-hover-info">
+                        <strong>Digital Triplet</strong>
+                        <p>Real-time physical state mapped continuously onto the virtual motor model — the novel core of this architecture.</p>
+                    </div>
+                </div>
+
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem">
+                    <h4>Prediction</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Inference layer</p>
+                    <div class="patent-hover-info">
+                        <strong>Prediction Engine</strong>
+                        <p>Thermal degradation and fault trajectory inference via lightweight ML models optimized for edge deployment.</p>
+                    </div>
+                </div>
+
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem" style="border-color: rgba(16,185,129,0.35);">
+                    <h4 style="color: var(--domain-industrial);">Control</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Action layer</p>
+                    <div class="patent-hover-info">
+                        <strong>Control Actions</strong>
+                        <p>Direct actuation to throttle load, switch redundant circuits, or issue safe-shutdown commands.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- NVIDIA Research Notebook -->
+        <div class="research-notebook" style="margin-top: var(--space-lg);">
+
+            <div class="nvidia-card" style="--card-accent: var(--domain-power);">
+                <div class="research-meta">
+                    <span>Investigation #01</span>
+                    <span class="research-status">Initial Modeling</span>
+                </div>
+                <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-heading);">Battery State of Health Estimation</h4>
+                <p style="font-size:0.88rem; margin-bottom:1rem;">
+                    Can edge-based coulomb counting augmented with thermal correction improve SoH prediction accuracy 
+                    under variable load cycles compared to static cell datasheets?
                 </p>
-                <div class="domain-map mt-md mb-md" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center;">
-                    <span class="domain-node" data-domain="power">Power Electronics</span>
-                    <span class="domain-node" data-domain="embedded">Embedded Systems</span>
-                    <span class="domain-node" data-domain="industrial">Industrial Automation</span>
-                    <span class="domain-node" data-domain="digital-twins">Digital Twins</span>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <span style="width:6px; height:6px; border-radius:50%; background:var(--domain-power); flex-shrink:0;"></span>
+                    <strong style="font-size:0.78rem; color:var(--domain-power);">Next: Experimental cell validation</strong>
                 </div>
-                <div class="hero-cta">
-                    <a href="#research" class="btn-primary">View Research</a>
-                    <a href="/resume.pdf" class="btn-secondary" target="_blank">Download CV</a>
-                    <a href="https://linkedin.com/in/jovial-joyson-0a4882276" class="btn-text" target="_blank">LinkedIn →</a>
-                </div>
-            </div>
-            <div class="hero-visual">
-                <div class="profile-container">
-                    <div class="concentric-rings"></div>
-                    <img src="/profile.jpg" alt="Jovial Joyson" class="profile-image">
-                </div>
-            </div>
-        </section>
-
-        <!-- Engineering Metrics Bar -->
-        <section id="metrics" class="metrics-bar container fade-in" style="--stagger:0">
-            <div class="metric-item">
-                <span class="metric-number" data-target="1">0</span>
-                <span class="metric-label">Indian Patent Filed</span>
-            </div>
-            <div class="metric-item">
-                <span class="metric-number" data-target="2">0</span>
-                <span class="metric-label">Industry Internships</span>
-            </div>
-            <div class="metric-item">
-                <span class="metric-number" data-target="5">0</span>
-                <span class="metric-label">Hardware Systems Built</span>
-            </div>
-            <div class="metric-item">
-                <span class="metric-number" data-target="3">0</span>
-                <span class="metric-label">Competition Awards</span>
-            </div>
-        </section>
-
-        <!-- Research & Innovation -->
-        <section id="research" class="container fade-in" style="--stagger:1">
-            <span class="section-label">Intellectual Contribution</span>
-            <h2 class="section-title">Research &amp; Innovation</h2>
-            <div class="research-grid">
-                <div class="research-card patent-card" style="grid-column: 1 / -1;" data-related="digital-twins industrial">
-                    <div class="status-badge status-research mb-sm">Patent Pending</div>
-                    <h3 style="font-size: 1.5rem; margin-bottom:0.5rem; line-height:1.3;">Context-Aware Digital Triplet System for Electrical Motors</h3>
-                    <div class="tags mb-lg">
-                        <span class="tech-badge">Indian Patent App: 202641051670</span>
-                        <span class="tech-badge">Status: Under Review</span>
-                        <a href="#" class="tech-badge" style="color:var(--accent-primary); border-color:var(--accent-primary); text-decoration:none; display:inline-block;">Download Technical Summary PDF ↓</a>
-                    </div>
-
-                    <div class="patent-content" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-xl);">
-                        <div class="patent-text">
-                            <div class="ieee-panel">
-                                <h4 class="mono-heading">Abstract</h4>
-                                <p>Conventional digital twins provide simulation fidelity but lack the closed-loop actuation layer needed for real-time motor health intervention. Under variable electrical load, the gap between simulated state and physical state grows, causing delayed fault response and preventable downtime.</p>
-                            </div>
-                            
-                            <div class="ieee-panel">
-                                <h4 class="mono-heading">Novel Contribution</h4>
-                                <p>The system introduces a three-layer "triplet" model that closes the loop between prediction and physical response, entirely eliminating the read-only limitation of conventional twins. By integrating direct actuation pathways, the system preempts thermal runaway.</p>
-                            </div>
-                            
-                            <div class="ieee-panel">
-                                <h4 class="mono-heading">Applications</h4>
-                                <p>Heavy industrial drives, EV powertrain prognostics, and autonomous manufacturing plants.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="patent-visual">
-                            <h4 class="mono-heading text-center mb-sm">Interactive Architecture</h4>
-                            <div class="patent-architecture">
-                                <div class="patent-node">
-                                    <h4>1. Physical Sensors</h4>
-                                    <p>Embedded stator thermocouples and hall-effect current sensors.</p>
-                                </div>
-                                <div class="loop-arrow">↓</div>
-                                <div class="patent-node">
-                                    <h4>2. Edge Processing</h4>
-                                    <p>High-frequency ADC sampling and initial noise filtering.</p>
-                                </div>
-                                <div class="loop-arrow">↓</div>
-                                <div class="patent-node">
-                                    <h4>3. Digital Triplet</h4>
-                                    <p>Real-time physical state mapped onto the virtual motor model.</p>
-                                </div>
-                                <div class="loop-arrow">↓</div>
-                                <div class="patent-node">
-                                    <h4>4. Prediction Engine</h4>
-                                    <p>Thermal degradation and fault trajectory inference.</p>
-                                </div>
-                                <div class="loop-arrow">↓</div>
-                                <div class="patent-node">
-                                    <h4>5. Control Actions</h4>
-                                    <p>Direct actuation to throttle load or switch redundant circuits.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="research-card interests-card">
-                    <h3 class="mb-md">Research Notebook</h3>
-                    <div style="display:flex; flex-direction:column; gap:1.5rem;">
-                        <div class="notebook-entry" style="border-left: 2px solid var(--accent-primary); padding-left: 1rem;" data-related="power embedded">
-                            <p class="mono-heading mb-sm">Investigation #01</p>
-                            <p><strong>Topic:</strong> Battery State of Health Estimation</p>
-                            <p><strong>Question:</strong> Can edge-based estimation improve SoH prediction accuracy compared to traditional coulomb counting?</p>
-                            <p><strong>Status:</strong> Initial MATLAB Modeling</p>
-                            <p><strong>Next Step:</strong> Experimental validation with battery datasets</p>
-                        </div>
-                        <div class="notebook-entry" style="border-left: 2px solid var(--accent-primary); padding-left: 1rem;" data-related="power">
-                            <p class="mono-heading mb-sm">Investigation #02</p>
-                            <p><strong>Topic:</strong> Power Electronics Optimization</p>
-                            <p><strong>Question:</strong> Can flyback converter magnetics be optimized to reduce converter volume without sacrificing efficiency?</p>
-                            <p><strong>Status:</strong> Literature Review</p>
-                            <p><strong>Next Step:</strong> LTspice simulations of core geometry</p>
-                        </div>
-                        <div class="notebook-entry" style="border-left: 2px solid var(--accent-primary); padding-left: 1rem;" data-related="embedded industrial">
-                            <p class="mono-heading mb-sm">Investigation #03</p>
-                            <p><strong>Topic:</strong> Embedded AI Fault Detection</p>
-                            <p><strong>Question:</strong> How effectively can lightweight ML models detect transient faults in high-noise industrial environments?</p>
-                            <p><strong>Status:</strong> Concept Phase</p>
-                            <p><strong>Next Step:</strong> Acquiring industrial vibration datasets</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Featured Work Section -->
-        <section id="featured" class="container fade-in" style="--stagger:2">
-            <span class="section-label">Selected Engineering Systems</span>
-            <h2 class="section-title">Featured Work</h2>
-            <div class="projects-grid">
-                <!-- Siemens Project -->
-                <div class="project-card" data-tilt data-related="industrial embedded" onclick="openModal('siemens-modal')">
-                    <div class="card-visual siemens-visual">
-                        <span class="status-badge status-completed">Completed</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Industrial PLC Automation</h3>
-                        <p>Programmed fault-safe control sequences using Siemens TIA Portal at the Siemens Centre of Excellence, Anna University. Designed SCADA and HMI interfaces for live process monitoring.</p>
-                        <div class="card-actions mt-sm">
-                            <button class="btn-text">View Case Study <span>→</span></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- eBAJA Project -->
-                <div class="project-card" data-tilt data-related="power embedded" onclick="openModal('ebaja-modal')">
-                    <div class="card-visual ebaja-visual">
-                        <span class="status-badge status-completed">Completed</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>eBAJA EV Battery System</h3>
-                        <p>Contributed to BMS design for real-time voltage and temperature monitoring across EV battery cells. Performed MATLAB simulations to validate battery behaviour under variable load.</p>
-                        <div class="card-actions mt-sm">
-                            <button class="btn-text">View Case Study <span>→</span></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 3: Animal Deterrent -->
-                <div class="project-card" onclick="openModal('deterrent-modal')">
-                    <div class="card-visual deterrent-visual">
-                        <span class="status-badge status-prototype">Prototype</span>
-                    </div>
-                    <div class="card-content">
-                        <h3>Edge AI Animal Deterrent</h3>
-                        <p>ML-based real-time animal detection system using computer vision inference on embedded hardware. Triggers automated deterrent mechanisms with confidence-threshold classification.</p>
-                        <div class="card-actions mt-sm">
-                            <button class="btn-text">View Case Study <span>→</span></button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
-            <div class="all-projects-cta text-center mt-xl">
-                <h3 class="subsection-title">Additional Systems</h3>
-                <p>PLC-based Pharmacy Automation, ESP32 Wireless Robotic Arm, Multi-node Smart Home IoT &mdash; documented on GitHub.</p>
-                <a href="https://github.com/J0o00" target="_blank" class="btn-outline mt-sm">View GitHub</a>
+            <div class="nvidia-card" style="--card-accent: var(--domain-embedded);">
+                <div class="research-meta">
+                    <span>Investigation #02</span>
+                    <span class="research-status">Literature Review</span>
+                </div>
+                <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-heading);">Flyback Converter Magnetics Optimization</h4>
+                <p style="font-size:0.88rem; margin-bottom:1rem;">
+                    Can transformer core geometry and gap optimization reduce converter volume by ≥25% 
+                    while maintaining efficiency above 88% across full load range?
+                </p>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <span style="width:6px; height:6px; border-radius:50%; background:var(--domain-embedded); flex-shrink:0;"></span>
+                    <strong style="font-size:0.78rem; color:var(--domain-embedded);">Next: LTspice winding simulation</strong>
+                </div>
             </div>
-        </section>
 
-        <!-- About Section -->
-        <section id="about" class="container fade-in" style="--stagger:3">
-            <span class="section-label">Profile</span>
-            <h2 class="section-title">About</h2>
-            <div class="about-content">
-                <p>Electrical &amp; Electronics Engineer at <strong style="color:var(--text-heading)">Christ College of Engineering</strong>, Irinjalakuda (B.Tech, Expected May 2027 &mdash; CGPA 7.83). Co-author of an Indian patent on intelligent motor monitoring architecture. Siemens-certified in industrial PLC programming and SCADA system design, and certified by IIT Madras Pravartak in Intelligent Data Center O&amp;M.</p>
-                <p style="margin-top:1rem">My engineering focus is on the boundary where physical hardware meets intelligent control: designing systems that monitor, predict, and respond to real-world conditions rather than operating on static assumptions. I work across the full vertical &mdash; from embedded sensor integration and power electronics to SCADA supervision and ML-based inference at the edge.</p>
+            <div class="nvidia-card" style="--card-accent: var(--domain-industrial);">
+                <div class="research-meta">
+                    <span>Investigation #03</span>
+                    <span class="research-status">Concept Phase</span>
+                </div>
+                <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-heading);">Embedded ML Fault Detection in Noisy Environments</h4>
+                <p style="font-size:0.88rem; margin-bottom:1rem;">
+                    How effectively can quantized TinyML models detect transient electrical faults in 
+                    high-EMI industrial motor drive environments without cloud connectivity?
+                </p>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <span style="width:6px; height:6px; border-radius:50%; background:var(--domain-industrial); flex-shrink:0;"></span>
+                    <strong style="font-size:0.78rem; color:var(--domain-industrial);">Next: Dataset acquisition from drives</strong>
+                </div>
             </div>
-        </section>
 
-        <!-- Engineering Philosophy -->
-        <section id="philosophy" class="container fade-in" style="--stagger:0">
-            <span class="section-label">Design Principles</span>
-            <h2 class="section-title">Engineering Approach</h2>
-            <div class="philosophy-grid">
-                <div class="phil-card">
-                    <h3 class="mono-heading">01. System-Level Thinking</h3>
-                    <p>Every component exists within a system. I design at the interface boundaries &mdash; between power and control, between embedded hardware and cloud supervision &mdash; because that is where most failures originate and most improvements are possible.</p>
-                </div>
-                <div class="phil-card">
-                    <h3 class="mono-heading">02. Simulate Before You Fabricate</h3>
-                    <p>MATLAB-based modelling and PLCSIM validation precede physical implementation. Catching a fault in simulation costs nothing; finding it on a live system costs everything.</p>
-                </div>
-                <div class="phil-card">
-                    <h3 class="mono-heading">03. Fault Tolerance Is Non-Negotiable</h3>
-                    <p>Industrial and EV systems operate in environments where failure has physical consequences. Every control design I produce includes structured fault states, watchdog logic, and defined safe-mode behaviour.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Skills Section -->
-        <section id="skills" class="container fade-in" style="--stagger:1">
-            <span class="section-label">Technical Stack</span>
-            <h2 class="section-title">Capabilities</h2>
-            <div class="skills-control-loop mt-lg">
-                <div class="loop-node" data-category="power" data-related="power">
-                    <h3>Power Electronics</h3>
-                    <div class="tags mt-sm" style="justify-content:center;">
-                        <span class="tech-badge">EV Systems</span>
-                        <span class="tech-badge">BMS Design</span>
-                        <span class="tech-badge">PCB Design</span>
-                    </div>
-                </div>
-                <div class="loop-arrow">↓</div>
-                <div class="loop-node" data-category="embedded" data-related="embedded power">
-                    <h3>Embedded Systems</h3>
-                    <div class="tags mt-sm" style="justify-content:center;">
-                        <span class="tech-badge">ESP32 / Arduino</span>
-                        <span class="tech-badge">C / C++</span>
-                        <span class="tech-badge">Sensor Integration</span>
-                    </div>
-                </div>
-                <div class="loop-arrow">↓</div>
-                <div class="loop-node" data-category="industrial" data-related="industrial embedded">
-                    <h3>Industrial Automation</h3>
-                    <div class="tags mt-sm" style="justify-content:center;">
-                        <span class="tech-badge">PLC (S7-1200)</span>
-                        <span class="tech-badge">Ladder Logic</span>
-                        <span class="tech-badge">TIA Portal</span>
-                    </div>
-                </div>
-                <div class="loop-arrow">↓</div>
-                <div class="loop-node" data-category="scada" data-related="industrial digital-twins">
-                    <h3>SCADA</h3>
-                    <div class="tags mt-sm" style="justify-content:center;">
-                        <span class="tech-badge">HMI Design</span>
-                        <span class="tech-badge">IoT (MQTT)</span>
-                    </div>
-                </div>
-                <div class="loop-arrow">↓</div>
-                <div class="loop-node" data-category="digital-twins" data-related="digital-twins power">
-                    <h3>Digital Twins</h3>
-                    <div class="tags mt-sm" style="justify-content:center;">
-                        <span class="tech-badge">MATLAB</span>
-                        <span class="tech-badge">Simulink</span>
-                        <span class="tech-badge">State Estimation</span>
-                    </div>
-                </div>
-                <div class="loop-arrow">↓</div>
-                <div class="loop-node" data-category="ai" data-related="digital-twins embedded">
-                    <h3>Artificial Intelligence</h3>
-                    <div class="tags mt-sm" style="justify-content:center;">
-                        <span class="tech-badge">Machine Learning</span>
-                        <span class="tech-badge">Computer Vision</span>
-                        <span class="tech-badge">Python</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-        <section id="experience" class="container fade-in" style="--stagger:2">
-            <span class="section-label">Career &amp; Recognition</span>
-            <h2 class="section-title">Experience</h2>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <p class="timeline-date mono-heading">Jun &ndash; Jul 2025</p>
-                        <h3>Industrial Automation Engineer Intern &mdash; Siemens COE, Anna University</h3>
-                        <p>Programmed and validated industrial PLC sequences using Siemens TIA Portal. Designed SCADA and HMI interfaces for live process supervision. Built structured fault-safe control architectures covering error states, watchdog timers, and operator alert systems.</p>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <p class="timeline-date mono-heading">Jan 2026 &ndash; Present</p>
-                        <h3>Technical Liaison Intern &mdash; White Matrix Software Solutions</h3>
-                        <p>Bridged the gap between client requirements and development execution. Authored structured technical documentation, requirement specifications, and facilitated cross-team communication to maintain delivery accuracy.</p>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <p class="timeline-date mono-heading">2025</p>
-                        <h3>Winner &amp; Best Pitch &mdash; BeachHack H4C National Hackathon</h3>
-                        <p>1st place from a competitive field for an AI-driven hardware solution. Also awarded 1st place at the Pitch Perfect Idea Competition and reached the finals of the Beach Hack AI Challenge.</p>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <p class="timeline-date mono-heading">Certification</p>
-                        <h3>IIT Madras Pravartak &mdash; Intelligent Data Center Operations &amp; Maintenance</h3>
-                        <p>Completed certification from IIT Madras Pravartak, covering intelligent infrastructure monitoring and O&amp;M frameworks. Also NPTEL certified in Introduction to Machine Learning. Serving as Communication Head at Meta Hub.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    <!-- Engineering Philosophy -->
-    <section id="philosophy" class="container fade-in" style="--stagger:3">
-        <span class="section-label">Engineering Philosophy</span>
-        <h2 class="section-title">Designing Under Constraints</h2>
-        <div class="philosophy-grid mt-lg" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-xl);">
-            <div class="philosophy-card" style="border-top: 2px solid var(--accent-primary); padding-top: 1rem;">
-                <h3 class="mb-sm">Hardware always behaves differently than simulation.</h3>
-                <p>Sensor noise is never zero. Parasitic inductance matters. Simulations prove theoretical feasibility, but physical testing and validation are required to prove viability.</p>
-            </div>
-            <div class="philosophy-card" style="border-top: 2px solid var(--accent-primary); padding-top: 1rem;">
-                <h3 class="mb-sm">Fault handling must be designed before deployment.</h3>
-                <p>A system's engineering quality is defined by how gracefully it fails, not how perfectly it runs under ideal conditions. Watchdog timers and mechanical interlocks are not optional.</p>
-            </div>
-            <div class="philosophy-card" style="border-top: 2px solid var(--accent-primary); padding-top: 1rem;">
-                <h3 class="mb-sm">Reliability beats complexity.</h3>
-                <p>An elegant, flat control logic structure that a floor technician can easily debug at 3 AM is vastly superior to a complex, black-box AI model that no one on the ground understands.</p>
-            </div>
         </div>
-    </section>
-    <!-- Currently Building -->
-    <section id="building" class="container fade-in mt-xl" style="--stagger:4; max-width: 650px; margin-left: auto; margin-right: auto;">
-        <span class="section-label text-center" style="display:block;">Active Work</span>
-        <h2 class="section-title text-center" style="display:block; margin-bottom:var(--space-lg);">Currently Building</h2>
-        <ul class="interests-list" style="background: var(--bg-secondary); padding: 2rem 2rem 2rem 3rem; border-radius: 8px; border: 1px solid var(--border-color);">
-            <li class="mb-sm"><strong>Flyback Converter Research</strong></li>
-            <li class="mb-sm"><strong>Battery State Estimation Models</strong></li>
-            <li class="mb-sm"><strong>Digital Triplet Applications</strong></li>
-            <li><strong>Machine Learning for Industrial Monitoring</strong></li>
-        </ul>
-    </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="container fade-in text-center mt-xl" style="--stagger:0">
-            <span class="section-label">Collaboration</span>
-            <h2 class="section-title" style="display:block;">Let's Work on Hard Problems</h2>
-            <p style="max-width:520px; margin: 0 auto var(--space-xl);">Available for research collaborations, engineering internships, and roles at the intersection of power electronics, embedded control, and intelligent automation. Based in Kerala, India &mdash; open to relocation and remote work.</p>
-            <div class="hero-cta" style="justify-content:center;">
-                <a href="mailto:jovialjoyson@gmail.com" class="btn-primary">jovialjoyson@gmail.com</a>
-                <a href="https://linkedin.com/in/jovial-joyson-0a4882276" class="btn-secondary" target="_blank">LinkedIn</a>
-                <a href="https://github.com/J0o00" class="btn-outline" target="_blank">GitHub</a>
-            </div>
-        </section>
-    </main>
+    </div>
+</section>
 
-    <footer>
-        <div class="container footer-content">
-            <div class="footer-brand">
-                <div class="logo">JJ</div>
-                <p class="footer-tagline">"Building systems that scale."</p>
-            </div>
-            <div class="footer-links">
-                <a href="https://linkedin.com/in/jovial-joyson-0a4882276" target="_blank">LinkedIn</a>
-                <a href="https://github.com/J0o00" target="_blank">GitHub</a>
-                <a href="mailto:jovialjoyson@gmail.com">Email</a>
-            </div>
-            <p class="copyright">&copy; 2026 Jovial Joyson &mdash; Electrical &amp; Electronics Engineer</p>
-        </div>
-    </footer>
+<!-- ─── FEATURED WORK ───────────────────────────────────── -->
+<section id="featured" class="container fade-in" style="--stagger:2" aria-labelledby="featured-title">
+    <span class="section-label">Selected Engineering Systems</span>
+    <h2 class="section-title" id="featured-title">Featured Work</h2>
 
-    <!-- Fullscreen Modals Overlay -->
-    <div id="modal-overlay" class="modal-overlay">
-        
-        <!-- Siemens Modal -->
-        <div id="siemens-modal" class="modal-container">
-            <div class="modal-header">
-                <button class="close-modal" onclick="closeModal()">×</button>
+    <div class="projects-grid">
+
+        <!-- Siemens PLC -->
+        <article class="project-card"
+                 data-tilt
+                 data-related="industrial embedded"
+                 data-domain="industrial"
+                 style="--card-glow: rgba(16, 185, 129, 0.08);"
+                 onclick="openModal('siemens-modal')"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Open Siemens PLC Automation case study">
+            <div class="card-visual siemens-visual">
+                <span class="status-badge status-completed">Completed</span>
             </div>
-            <div class="modal-content">
-                <div class="modal-hero siemens-bg">
-                    <span class="status-badge status-completed">Completed</span>
-                    <h1>Siemens PLC Automation</h1>
-                    <div class="modal-links mt-md">
-                        <a href="#" class="btn-outline">GitHub</a>
-                        <a href="#" class="btn-outline">Documentation</a>
+            <div class="card-content">
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:var(--domain-industrial);flex-shrink:0;"></span>
+                    <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--domain-industrial);text-transform:uppercase;letter-spacing:0.08em;">Industrial Automation</span>
+                </div>
+                <h3>Industrial PLC Automation</h3>
+                <p>Programmed fault-safe control sequences using Siemens TIA Portal at the Siemens Centre of Excellence, Anna University. Designed SCADA and HMI interfaces for live process supervision.</p>
+
+                <!-- Verified spec table: tool + architecture info, no invented metrics -->
+                <div class="card-spec-table" aria-label="Project specifications">
+                    <div class="card-spec-row">
+                        <span class="spec-key">PLC Platform</span>
+                        <span class="spec-value">Siemens S7-1200</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Programming</span>
+                        <span class="spec-value">TIA Portal v17</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Interface</span>
+                        <span class="spec-value">SCADA + HMI</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Architecture</span>
+                        <span class="spec-value">Ladder Logic</span>
                     </div>
                 </div>
-                
-                <div class="modal-body">
-                    <h3>Overview</h3>
-                    <p>Industrial automation internship at the Siemens Centre of Excellence, Anna University (Jun – Jul 2025). Programmed and validated PLC-based control workflows for industrial process automation scenarios.</p>
+            </div>
+        </article>
 
-                    <h3>Problem</h3>
-                    <p>Manual process sequences in industrial lines introduce human error, slow throughput, and unsafe operating conditions. The goal was to design a fully automated, fault-safe control sequence using programmable logic controllers.</p>
-
-                    <h3>Trade-offs & Constraints</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Interrupts vs. Polling:</strong> Chose polling for non-critical sensor checks to reduce interrupt overhead, trading 10ms latency for system stability.</li>
-                        <li><strong>Complexity vs. Maintainability:</strong> Kept ladder logic flat to ensure floor technicians could troubleshoot it without advanced training.</li>
-                        <li><strong>Constraints:</strong> Real-time cycle time limits and fail-safe interlocks with legacy HMI systems.</li>
-                    </ul>
-
-                    <h3>System Architecture</h3>
-                    <img src="/siemens-diagram.png" alt="Siemens Architecture Diagram" class="my-md" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
-
-                    <h3>Technologies Used</h3>
-                    <div class="tags mb-md">
-                        <span class="tech-badge">Siemens S7-1200 PLC</span>
-                        <span class="tech-badge">TIA Portal</span>
-                        <span class="tech-badge">Ladder Logic</span>
-                        <span class="tech-badge">SCADA</span>
-                        <span class="tech-badge">HMI Panel</span>
-                    </div>
-
-                    <h3>Key Engineering Decisions</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Why PLC instead of a Microcontroller?</strong> Required industrial-grade electrical noise immunity and native 24V I/O for direct actuator control.</li>
-                        <li><strong>Why TIA Portal?</strong> Unified environment allowed simultaneous development of the PLC logic and HMI screens, ensuring data tags were perfectly synchronized.</li>
-                    </ul>
-
-                    <h3>Implementation</h3>
-                    <p>Programmed ladder logic sequences for sequential actuator control and fault-safe operation. Designed SCADA and HMI interfaces for live process monitoring and operator visualization. Structured the control architecture for reliability under variable industrial load conditions.</p>
-
-                    <h3>Engineering Failure Log</h3>
-                    <div class="failure-log mono-heading mb-md" style="background:var(--bg-secondary); padding:1rem; border-radius:4px; border:1px solid var(--border-color); text-transform:none; letter-spacing:normal; font-size:0.85rem;">
-                        <span style="color:var(--accent-primary);">Failure:</span> Sensor signal loss during high-load switching.<br><br>
-                        <span style="color:var(--accent-primary);">Investigation:</span> TIA Portal trace revealed inductive kickback causing false lows on the PLC input module.<br><br>
-                        <span style="color:var(--accent-primary);">Solution:</span> Implemented structured error-state logic branches and a 500ms watchdog timer.<br><br>
-                        <span style="color:var(--accent-primary);">Result:</span> Safe system halt with HMI alerts instead of indefinite sequence freezing.
-                    </div>
-
-                    <h3>System Impact</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Process Consistency:</strong> Automated repetitive control sequences, reducing operator dependency and improving overall process consistency.</li>
-                        <li><strong>Safety:</strong> Added fault-tolerant logic and mechanical interlocks to prevent hazardous collisions during sensor failure.</li>
-                    </ul>
-
-                    <h3>Engineering Artifacts</h3>
-                    <div class="tags mb-md">
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] System Architecture Diagram</span>
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] PLC Ladder Logic (PDF)</span>
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] SCADA HMI Screenshots</span>
-                    </div>
-
-                    <h3 class="improve-heading">What I Would Improve Today</h3>
-                    <p>I would implement a digital twin of the system in Siemens NX or PLCSIM Advanced before writing the physical PLC code, allowing simulation of fault conditions and edge cases in a safe environment before deployment.</p>
+        <!-- eBAJA EV -->
+        <article class="project-card"
+                 data-tilt
+                 data-related="power embedded"
+                 data-domain="power"
+                 style="--card-glow: rgba(249, 115, 22, 0.08);"
+                 onclick="openModal('ebaja-modal')"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Open eBAJA EV Battery System case study">
+            <div class="card-visual ebaja-visual">
+                <span class="status-badge status-completed">Completed</span>
+            </div>
+            <div class="card-content">
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:var(--domain-power);flex-shrink:0;"></span>
+                    <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--domain-power);text-transform:uppercase;letter-spacing:0.08em;">Power Electronics</span>
                 </div>
+                <h3>eBAJA EV Battery Management</h3>
+                <p>Contributed to BMS design for real-time voltage and temperature monitoring across EV battery cells under high-vibration off-road conditions. MATLAB thermal simulation and ECU integration.</p>
+
+                <div class="card-spec-table" aria-label="Project specifications">
+                    <div class="card-spec-row">
+                        <span class="spec-key">BMS Function</span>
+                        <span class="spec-value">Cell Voltage + Temp</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Simulation</span>
+                        <span class="spec-value">MATLAB Simulink</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Integration</span>
+                        <span class="spec-value">ECU + Subsystem Wiring</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Context</span>
+                        <span class="spec-value">eBAJA EV 2025</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Edge AI Deterrent -->
+        <article class="project-card"
+                 data-tilt
+                 data-related="embedded ai"
+                 data-domain="embedded"
+                 style="--card-glow: rgba(14, 165, 233, 0.08);"
+                 onclick="openModal('deterrent-modal')"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Open Edge AI Animal Deterrent case study">
+            <div class="card-visual deterrent-visual">
+                <span class="status-badge status-prototype">Prototype</span>
+            </div>
+            <div class="card-content">
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:var(--domain-embedded);flex-shrink:0;"></span>
+                    <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--domain-embedded);text-transform:uppercase;letter-spacing:0.08em;">Embedded Systems · AI</span>
+                </div>
+                <h3>Edge AI Animal Deterrent</h3>
+                <p>ML-based real-time animal detection system using computer vision on embedded hardware. Sub-second inference triggers automated deterrents without cloud connectivity.</p>
+
+                <div class="card-spec-table" aria-label="Project specifications">
+                    <div class="card-spec-row">
+                        <span class="spec-key">Hardware</span>
+                        <span class="spec-value">ESP32-CAM + RPi</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Vision Library</span>
+                        <span class="spec-value">OpenCV</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Inference</span>
+                        <span class="spec-value">Edge (no cloud)</span>
+                    </div>
+                    <div class="card-spec-row">
+                        <span class="spec-key">Deterrent Type</span>
+                        <span class="spec-value">Automated Trigger</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+    </div>
+
+    <div class="all-projects-cta text-center mt-xl">
+        <h3 class="subsection-title">Additional Systems</h3>
+        <p style="margin-top:0.5rem;">PLC Pharmacy Automation · ESP32 Wireless Robotic Arm · Multi-node Smart Home IoT — documented on GitHub.</p>
+        <a href="https://github.com/J0o00" target="_blank" rel="noopener" class="btn-outline mt-md">View GitHub</a>
+    </div>
+</section>
+
+<!-- ─── ENGINEERING DOMAINS ─────────────────────────────── -->
+<section id="domains" class="container fade-in" style="--stagger:3" aria-labelledby="domains-title">
+    <span class="section-label">Technical Breadth</span>
+    <h2 class="section-title" id="domains-title">Engineering Domains</h2>
+    <p style="max-width:580px; margin-bottom: var(--space-lg);">
+        Systems built and studied across five interconnected engineering disciplines.
+    </p>
+
+    <div class="domains-grid">
+
+        <div class="domain-card" style="--domain-accent: var(--domain-industrial);">
+            <span class="domain-card-icon" aria-hidden="true">⚙️</span>
+            <div class="domain-card-name">Industrial Automation</div>
+            <div class="domain-card-count">4 Projects</div>
+            <div class="domain-card-skills">
+                <span class="domain-skill-tag">PLC Programming</span>
+                <span class="domain-skill-tag">SCADA</span>
+                <span class="domain-skill-tag">TIA Portal</span>
+                <span class="domain-skill-tag">HMI</span>
             </div>
         </div>
 
-        <!-- eBAJA Modal -->
-        <div id="ebaja-modal" class="modal-container">
-            <div class="modal-header">
-                <button class="close-modal" onclick="closeModal()">×</button>
-            </div>
-            <div class="modal-content">
-                <div class="modal-hero ebaja-bg">
-                    <span class="status-badge status-completed">Completed</span>
-                    <h1>eBAJA EV Powertrain</h1>
-                    <div class="modal-links mt-md">
-                        <a href="#" class="btn-outline">GitHub</a>
-                        <a href="#" class="btn-outline">Documentation</a>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <h3>Overview</h3>
-                    <p>Contributed to the Battery Management System (BMS) design and vehicle electronics integration for the eBAJA EV Competition 2025 — an off-road electric vehicle challenge.</p>
-
-                    <h3>Problem</h3>
-                    <p>Off-road EVs demand robust battery monitoring and thermal management under extreme vibration, variable load, and high peak-current conditions. A failure in the BMS can lead to thermal runaway or complete vehicle shutdown mid-race.</p>
-
-                    <h3>Trade-offs & Constraints</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Accuracy vs. Processing Speed:</strong> Settled on a 10Hz sampling rate to prevent the main control loop from overrunning its time budget.</li>
-                        <li><strong>Battery Life vs. Telemetry:</strong> Reduced active monitoring during idle states to preserve low-voltage auxiliary power.</li>
-                        <li><strong>Constraints:</strong> Strict weight limits, competition ruleset compliance, and severe vibration resistance requirements.</li>
-                    </ul>
-
-                    <h3>System Architecture</h3>
-                    <img src="/ebaja-schematic.png" alt="Powertrain Schematic" class="my-md" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
-
-                    <h3>Technologies Used</h3>
-                    <div class="tags mb-md">
-                        <span class="tech-badge">BMS Design</span>
-                        <span class="tech-badge">ECU Interfacing</span>
-                        <span class="tech-badge">MATLAB Simulation</span>
-                        <span class="tech-badge">Embedded Sensors</span>
-                        <span class="tech-badge">Subsystem Wiring</span>
-                    </div>
-
-                    <h3>Key Engineering Decisions</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Why MATLAB Simulation First?</strong> Validating the battery model in software before physical integration allowed us to size the cooling system safely without risking thermal damage to the actual cells.</li>
-                    </ul>
-
-                    <h3>Implementation</h3>
-                    <p>Contributed to BMS design for real-time monitoring of voltage and temperature parameters across EV battery cells. Assisted in ECU interfacing, subsystem wiring, and embedded sensor integration for the vehicle electronics. Performed MATLAB-based simulations to validate battery behaviour and model system performance under variable load conditions.</p>
-
-                    <h3>Engineering Failure Log</h3>
-                    <div class="failure-log mono-heading mb-md" style="background:var(--bg-secondary); padding:1rem; border-radius:4px; border:1px solid var(--border-color); text-transform:none; letter-spacing:normal; font-size:0.85rem;">
-                        <span style="color:var(--accent-primary);">Failure:</span> Battery temperature readings fluctuated wildly under physical testing.<br><br>
-                        <span style="color:var(--accent-primary);">Investigation:</span> High-frequency mechanical vibration caused intermittent contact between the thermistors and the cell casings.<br><br>
-                        <span style="color:var(--accent-primary);">Solution:</span> Modified the sensor mounting strategy with thermal epoxy and added software low-pass filtering to smooth the ADC readings.<br><br>
-                        <span style="color:var(--accent-primary);">Result:</span> Stable and reliable temperature monitoring under full dynamic load conditions.
-                    </div>
-
-                    <h3>System Impact</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Reliability:</strong> Improved confidence in battery thermal monitoring under vibration-heavy operating conditions.</li>
-                        <li><strong>Maintainability:</strong> Modularized the BMS wiring harness for rapid pit-stop replacement.</li>
-                    </ul>
-
-                    <h3>Engineering Artifacts</h3>
-                    <div class="tags mb-md">
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] Battery Thermal MATLAB Plot</span>
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] Powertrain Circuit Schematic</span>
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] Physical Sensor Mounting Photo</span>
-                    </div>
-
-                    <h3 class="improve-heading">What I Would Improve Today</h3>
-                    <p>I would implement a real-time telemetry system over MQTT or CAN bus to stream live cell voltage and temperature data to a pit-side dashboard, enabling early detection of thermal anomalies before they escalate during a race.</p>
-                </div>
+        <div class="domain-card" style="--domain-accent: var(--domain-power);">
+            <span class="domain-card-icon" aria-hidden="true">⚡</span>
+            <div class="domain-card-name">Power Electronics</div>
+            <div class="domain-card-count">3 Projects</div>
+            <div class="domain-card-skills">
+                <span class="domain-skill-tag">BMS Design</span>
+                <span class="domain-skill-tag">MATLAB Sim</span>
+                <span class="domain-skill-tag">Converter Design</span>
             </div>
         </div>
 
-
-        <!-- Deterrent Modal -->
-        <div id="deterrent-modal" class="modal-container">
-            <div class="modal-header">
-                <button class="close-modal" onclick="closeModal()">×</button>
+        <div class="domain-card" style="--domain-accent: var(--domain-embedded);">
+            <span class="domain-card-icon" aria-hidden="true">🔌</span>
+            <div class="domain-card-name">Embedded Systems</div>
+            <div class="domain-card-count">5 Projects</div>
+            <div class="domain-card-skills">
+                <span class="domain-skill-tag">ESP32</span>
+                <span class="domain-skill-tag">Arduino</span>
+                <span class="domain-skill-tag">PCB Design</span>
+                <span class="domain-skill-tag">C / Embedded C</span>
             </div>
-            <div class="modal-content">
-                <div class="modal-hero deterrent-bg">
-                    <span class="status-badge status-prototype">Prototype</span>
-                    <h1>Animal Deterrent System</h1>
-                    <div class="modal-links mt-md">
-                        <a href="#" class="btn-outline">GitHub</a>
-                        <a href="#" class="btn-outline">Documentation</a>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <h3>Overview</h3>
-                    <p>An ML-based real-time animal detection and deterrence system using computer vision concepts, designed to protect agricultural land from wildlife encroachment.</p>
+        </div>
 
-                    <h3>Problem</h3>
-                    <p>Crop destruction by wild animals causes significant economic loss for farmers. Traditional electric fences are dangerous, require maintenance, and are restricted in many regions.</p>
+        <div class="domain-card" style="--domain-accent: var(--domain-ai);">
+            <span class="domain-card-icon" aria-hidden="true">🤖</span>
+            <div class="domain-card-name">AI for Engineering</div>
+            <div class="domain-card-count">2 Projects</div>
+            <div class="domain-card-skills">
+                <span class="domain-skill-tag">Computer Vision</span>
+                <span class="domain-skill-tag">OpenCV</span>
+                <span class="domain-skill-tag">Edge ML</span>
+            </div>
+        </div>
 
-                    <h3>Trade-offs & Constraints</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Model Confidence vs. False Positives:</strong> Set a strict 85% confidence threshold to heavily penalize false positives, trading off occasional missed detections to avoid nuisance alarms.</li>
-                        <li><strong>Power Consumption vs. Inference Speed:</strong> Downsampled camera feed to 15fps to keep the CPU under thermal limits for passive cooling.</li>
-                        <li><strong>Constraints:</strong> Reliable outdoor operation under variable lighting, remote deployment with limited power budget.</li>
-                    </ul>
-
-                    <h3>System Architecture</h3>
-                    <img src="/deterrent-architecture.png" alt="Edge AI Architecture" class="my-md" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color);">
-
-                    <h3>Technologies Used</h3>
-                    <div class="tags mb-md">
-                        <span class="tech-badge">Computer Vision</span>
-                        <span class="tech-badge">Machine Learning</span>
-                        <span class="tech-badge">Raspberry Pi</span>
-                        <span class="tech-badge">OpenCV</span>
-                        <span class="tech-badge">IoT</span>
-                        <span class="tech-badge">Automated Deterrent</span>
-                    </div>
-
-                    <h3>Key Engineering Decisions</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Why Local Edge Inference instead of Cloud?</strong> Required sub-second response times to activate the deterrent before animals caused damage, making cloud round-trip latency unacceptable. Also ensured operability in areas with zero cellular reception.</li>
-                    </ul>
-
-                    <h3>Implementation</h3>
-                    <p>Built an ML-based real-time animal detection pipeline using computer vision. The system processes live camera input, classifies detected animals, and triggers automated deterrent mechanisms (ultrasonic or alert-based) based on detection output. Detection logic was designed to minimise false positives in a real agricultural environment.</p>
-
-                    <h3>Engineering Failure Log</h3>
-                    <div class="failure-log mono-heading mb-md" style="background:var(--bg-secondary); padding:1rem; border-radius:4px; border:1px solid var(--border-color); text-transform:none; letter-spacing:normal; font-size:0.85rem;">
-                        <span style="color:var(--accent-primary);">Failure:</span> Continuous false-positive triggers during the night.<br><br>
-                        <span style="color:var(--accent-primary);">Investigation:</span> The IR illumination caused specular reflections on wet leaves, which the baseline model misinterpreted as animal eyes/shapes.<br><br>
-                        <span style="color:var(--accent-primary);">Solution:</span> Augmented the training dataset heavily with IR-specific agricultural background images and tuned the confidence thresholds.<br><br>
-                        <span style="color:var(--accent-primary);">Result:</span> Nighttime false-positive rate dropped to near zero, maintaining >90% true-positive accuracy.
-                    </div>
-
-                    <h3>System Impact</h3>
-                    <ul class="interests-list mb-md">
-                        <li><strong>Scalability:</strong> Proved the viability of a low-cost, edge-based alternative to expensive electric fencing.</li>
-                        <li><strong>Reliability:</strong> Reduced nighttime false-positive triggers to near-zero, ensuring the deterrent only fires on genuine threats.</li>
-                    </ul>
-
-                    <h3>Engineering Artifacts</h3>
-                    <div class="tags mb-md">
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] Model Confidence Matrix</span>
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] Edge Deployment Architecture</span>
-                        <span class="tech-badge" style="border-style:dashed; color:var(--text-muted);">[Placeholder] Field Test Video Demo</span>
-                    </div>
-
-                    <h3 class="improve-heading">What I Would Improve Today</h3>
-                    <p>I would migrate the inference pipeline to a dedicated edge AI accelerator (such as a Coral Edge TPU) to reduce latency and power consumption significantly, making the system viable for long-term solar-powered deployment in remote fields.</p>
-                </div>
+        <div class="domain-card" style="--domain-accent: var(--domain-digital);">
+            <span class="domain-card-icon" aria-hidden="true">🧬</span>
+            <div class="domain-card-name">Digital Twins</div>
+            <div class="domain-card-count">1 Patent</div>
+            <div class="domain-card-skills">
+                <span class="domain-skill-tag">System Architecture</span>
+                <span class="domain-skill-tag">Simulation</span>
+                <span class="domain-skill-tag">Control Loops</span>
             </div>
         </div>
 
     </div>
+</section>
 
-    <script type="module" src="./js/main.js"></script>
-    <script src="./js/utils/scroll.js" type="module"></script>
-    <script src="./js/utils/theme.js" type="module"></script>
-    <script src="./js/components/tilt.js" type="module"></script>
-    <script>
-        // Modal Logic
-        function openModal(id) {
-            document.getElementById('modal-overlay').classList.add('active');
-            document.querySelectorAll('.modal-container').forEach(m => m.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.body.style.overflow = 'hidden'; 
-        }
-        
-        function closeModal() {
-            document.getElementById('modal-overlay').classList.remove('active');
-            document.querySelectorAll('.modal-container').forEach(m => m.classList.remove('active'));
-            document.body.style.overflow = 'auto'; 
-        }
+<!-- ─── ABOUT ────────────────────────────────────────────── -->
+<section id="about" class="container fade-in" style="--stagger:3" aria-labelledby="about-title">
+    <span class="section-label">Profile</span>
+    <h2 class="section-title" id="about-title">About</h2>
+    <div class="about-content" style="max-width:680px;">
+        <p>
+            Electrical &amp; Electronics Engineering student at <strong style="color:var(--text-heading)">Christ College of Engineering</strong>, 
+            Irinjalakuda (B.Tech, Expected May 2027 — CGPA 7.83). Co-author of an Indian patent on intelligent motor monitoring 
+            architecture. Siemens-certified in industrial PLC programming and SCADA system design, and certified by 
+            IIT Madras Pravartak in Intelligent Data Center O&amp;M.
+        </p>
+        <p style="margin-top:1rem;">
+            My engineering focus is on the boundary where physical hardware meets intelligent control: designing systems 
+            that monitor, predict, and respond to real-world conditions rather than operating on static assumptions. 
+            I work across the full vertical — from embedded sensor integration and power electronics to SCADA 
+            supervision and ML-based inference at the edge.
+        </p>
+    </div>
+</section>
 
-        document.getElementById('modal-overlay').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
+<!-- ─── SKILLS ───────────────────────────────────────────── -->
+<section id="skills" class="container fade-in" style="--stagger:1" aria-labelledby="skills-title">
+    <span class="section-label">Technical Stack</span>
+    <h2 class="section-title" id="skills-title">Engineering Capabilities</h2>
+
+    <!-- Knowledge Graph — horizontal flow with domain chips -->
+    <div class="knowledge-graph" role="list" aria-label="Engineering knowledge graph">
+        <div class="knowledge-node domain-power"      role="listitem">Power Electronics</div>
+        <span class="knowledge-connector" aria-hidden="true">→</span>
+        <div class="knowledge-node domain-embedded"   role="listitem">Embedded Systems</div>
+        <span class="knowledge-connector" aria-hidden="true">→</span>
+        <div class="knowledge-node domain-industrial" role="listitem">Industrial Automation</div>
+        <span class="knowledge-connector" aria-hidden="true">→</span>
+        <div class="knowledge-node domain-digital"    role="listitem">Digital Twins</div>
+        <span class="knowledge-connector" aria-hidden="true">→</span>
+        <div class="knowledge-node domain-ai"         role="listitem">Artificial Intelligence</div>
+    </div>
+
+    <p class="text-center mt-md" style="max-width:560px; margin-left:auto; margin-right:auto;">
+        Competencies that integrate vertically — from physical layer sensing to intelligent supervisory control.
+    </p>
+
+    <!-- Tool Stack -->
+    <div class="tags" style="justify-content:center; margin-top:var(--space-lg); gap:0.5rem;">
+        <span class="tech-badge">Siemens TIA Portal</span>
+        <span class="tech-badge">PLCSIM Advanced</span>
+        <span class="tech-badge">MATLAB / Simulink</span>
+        <span class="tech-badge">LTspice</span>
+        <span class="tech-badge">Python</span>
+        <span class="tech-badge">C / Embedded C</span>
+        <span class="tech-badge">ESP32</span>
+        <span class="tech-badge">Arduino</span>
+        <span class="tech-badge">OpenCV</span>
+        <span class="tech-badge">Raspberry Pi</span>
+        <span class="tech-badge">SCADA / HMI</span>
+        <span class="tech-badge">CAN Bus</span>
+        <span class="tech-badge">MQTT</span>
+        <span class="tech-badge">PCB Design</span>
+    </div>
+</section>
+
+<!-- ─── EXPERIENCE ───────────────────────────────────────── -->
+<section id="experience" class="container fade-in" style="--stagger:2" aria-labelledby="experience-title">
+    <span class="section-label">Career &amp; Recognition</span>
+    <h2 class="section-title" id="experience-title">Experience</h2>
+    <div class="timeline">
+
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <p class="timeline-date">Jun – Jul 2025</p>
+                <h3>Industrial Automation Engineer Intern — Siemens COE, Anna University</h3>
+                <p>Programmed and validated industrial PLC sequences using Siemens TIA Portal. Designed SCADA and HMI interfaces for live process supervision. Built structured fault-safe control architectures covering error states, watchdog timers, and operator alert systems.</p>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <p class="timeline-date">Jan 2026 – Present</p>
+                <h3>Technical Liaison Intern — White Matrix Software Solutions</h3>
+                <p>Bridged client requirements and development execution. Authored structured technical documentation, requirement specifications, and facilitated cross-team communication to maintain delivery accuracy.</p>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <p class="timeline-date">2025</p>
+                <h3>Winner &amp; Best Pitch — BeachHack H4C National Hackathon</h3>
+                <p>1st place from a competitive field for an AI-driven hardware solution. Also awarded 1st place at the Pitch Perfect Idea Competition and reached the finals of the Beach Hack AI Challenge.</p>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <p class="timeline-date">Certification</p>
+                <h3>IIT Madras Pravartak — Intelligent Data Center Operations &amp; Maintenance</h3>
+                <p>Completed certification covering intelligent infrastructure monitoring and O&amp;M frameworks. NPTEL certified in Introduction to Machine Learning. Serving as Communication Head at Meta Hub.</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ─── PHILOSOPHY ───────────────────────────────────────── -->
+<section id="philosophy" class="container fade-in" style="--stagger:3" aria-labelledby="philosophy-title">
+    <span class="section-label">Engineering Philosophy</span>
+    <h2 class="section-title" id="philosophy-title">Designing Under Constraints</h2>
+    <div class="philosophy-grid">
+
+        <div class="phil-card">
+            <h3>01. Hardware diverges from simulation.</h3>
+            <p>Sensor noise is never zero. Parasitic inductance matters. Simulations prove theoretical feasibility, but physical testing is required to prove viability. Plan for the gap.</p>
+        </div>
+
+        <div class="phil-card">
+            <h3>02. Fault handling precedes deployment.</h3>
+            <p>A system's engineering quality is defined by how gracefully it fails, not how perfectly it runs under ideal conditions. Watchdog timers and mechanical interlocks are non-negotiable.</p>
+        </div>
+
+        <div class="phil-card">
+            <h3>03. Reliability beats complexity.</h3>
+            <p>An elegant flat control logic structure a floor technician can debug at 3 AM vastly outperforms a complex black-box model that no one on the ground understands.</p>
+        </div>
+
+    </div>
+</section>
+
+<!-- ─── CURRENTLY BUILDING ─────────────────────────────── -->
+<section id="building" class="container fade-in" style="--stagger:4; max-width:640px;" aria-labelledby="building-title">
+    <span class="section-label" style="display:block; text-align:center;">Active Work</span>
+    <h2 class="section-title text-center" style="display:block; margin-bottom:var(--space-lg);" id="building-title">Currently Building</h2>
+    <ul class="building-list">
+        <li><strong>Flyback Converter Magnetics Research</strong> — volume optimization study</li>
+        <li><strong>Battery State Estimation Models</strong> — edge-based SoH algorithms</li>
+        <li><strong>Digital Triplet Applications</strong> — extending the patent architecture</li>
+        <li><strong>ML for Industrial Monitoring</strong> — TinyML fault detection</li>
+    </ul>
+</section>
+
+<!-- ─── CONTACT ──────────────────────────────────────────── -->
+<section id="contact" class="container fade-in text-center" style="--stagger:0" aria-labelledby="contact-title">
+    <span class="section-label">Collaboration</span>
+    <h2 class="section-title" style="display:block;" id="contact-title">Let's Work on Hard Problems</h2>
+    <p style="max-width:500px; margin: 0 auto var(--space-xl);">
+        Available for research collaborations, engineering internships, and roles at the intersection 
+        of power electronics, embedded control, and intelligent automation. Based in Kerala, India — open 
+        to relocation and remote work.
+    </p>
+    <div class="hero-cta" style="justify-content:center;">
+        <a href="mailto:jovialjoyson@gmail.com" class="btn-primary">jovialjoyson@gmail.com</a>
+        <a href="https://linkedin.com/in/jovial-joyson-0a4882276" class="btn-secondary" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/J0o00" class="btn-outline" target="_blank" rel="noopener">GitHub</a>
+    </div>
+</section>
+
+</main>
+
+<!-- ─── FOOTER ───────────────────────────────────────────── -->
+<footer>
+    <div class="container footer-content">
+        <div class="footer-brand">
+            <div class="logo">JJ</div>
+            <p class="footer-tagline">"Building systems that scale."</p>
+        </div>
+        <div class="footer-links">
+            <a href="https://linkedin.com/in/jovial-joyson-0a4882276" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="https://github.com/J0o00" target="_blank" rel="noopener">GitHub</a>
+            <a href="mailto:jovialjoyson@gmail.com">Email</a>
+        </div>
+        <p class="copyright">© 2026 Jovial Joyson — Electrical &amp; Electronics Engineer</p>
+    </div>
+</footer>
+
+<!-- ─── MODALS ───────────────────────────────────────────── -->
+<div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true">
+
+    <!-- Siemens Modal -->
+    <div id="siemens-modal" class="modal-container">
+        <div class="modal-header">
+            <button class="close-modal" onclick="closeModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-hero siemens-bg">
+                <span class="status-badge status-completed">Completed</span>
+                <h1>Siemens PLC Automation</h1>
+                <div class="modal-links mt-md">
+                    <a href="#" class="btn-outline">GitHub</a>
+                    <a href="#" class="btn-outline">Documentation</a>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h3>Overview</h3>
+                <p>Industrial automation internship at the Siemens Centre of Excellence, Anna University (Jun – Jul 2025). Programmed and validated PLC-based control workflows for industrial process automation scenarios.</p>
+
+                <h3>Problem</h3>
+                <p>Manual process sequences in industrial lines introduce human error, slow throughput, and unsafe operating conditions. The goal was to design a fully automated, fault-safe control sequence using programmable logic controllers.</p>
+
+                <h3>Trade-offs &amp; Constraints</h3>
+                <ul class="interests-list mb-md">
+                    <li><strong>Interrupts vs. Polling:</strong> Chose polling for non-critical sensor checks to reduce interrupt overhead, trading 10ms latency for system stability.</li>
+                    <li><strong>Complexity vs. Maintainability:</strong> Kept ladder logic flat to ensure floor technicians could troubleshoot it without advanced training.</li>
+                    <li><strong>Constraints:</strong> Real-time cycle time limits and fail-safe interlocks with legacy HMI systems.</li>
+                </ul>
+
+                <h3>Technologies Used</h3>
+                <div class="tags mb-md">
+                    <span class="tech-badge">Siemens S7-1200 PLC</span>
+                    <span class="tech-badge">TIA Portal</span>
+                    <span class="tech-badge">Ladder Logic</span>
+                    <span class="tech-badge">SCADA</span>
+                    <span class="tech-badge">HMI Panel</span>
+                    <span class="tech-badge">PLCSIM</span>
+                </div>
+
+                <h3>Key Engineering Decisions</h3>
+                <ul class="interests-list mb-md">
+                    <li><strong>Why PLC instead of a Microcontroller?</strong> Required industrial-grade electrical noise immunity and native 24V I/O for direct actuator control.</li>
+                    <li><strong>Why TIA Portal?</strong> Unified environment allowed simultaneous development of the PLC logic and HMI screens, ensuring data tags were perfectly synchronized.</li>
+                </ul>
+
+                <h3>Implementation</h3>
+                <p>Programmed ladder logic sequences for sequential actuator control and fault-safe operation. Designed SCADA and HMI interfaces for live process monitoring. Structured control architecture for reliability under variable industrial load conditions.</p>
+
+                <h3>Engineering Failure Log</h3>
+                <div class="failure-log mb-md">
+                    <span style="color:var(--domain-power);">Failure:</span> Sensor signal loss during high-load switching.<br><br>
+                    <span style="color:var(--domain-power);">Investigation:</span> TIA Portal trace revealed inductive kickback causing false lows on the PLC input module.<br><br>
+                    <span style="color:var(--domain-power);">Solution:</span> Implemented structured error-state logic branches and a 500ms watchdog timer.<br><br>
+                    <span style="color:var(--domain-power);">Result:</span> Safe system halt with HMI alerts instead of indefinite sequence freezing.
+                </div>
+
+                <h3>System Impact</h3>
+                <ul class="interests-list mb-md">
+                    <li><strong>Process Consistency:</strong> Automated repetitive control sequences, reducing operator dependency.</li>
+                    <li><strong>Safety:</strong> Added fault-tolerant logic and mechanical interlocks to prevent hazardous collisions during sensor failure.</li>
+                </ul>
+
+                <h3 class="improve-heading">What I Would Improve Today</h3>
+                <p>Implement a digital twin of the system in Siemens NX or PLCSIM Advanced before writing physical PLC code, allowing simulation of fault conditions in a safe environment before deployment.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- eBAJA Modal -->
+    <div id="ebaja-modal" class="modal-container">
+        <div class="modal-header">
+            <button class="close-modal" onclick="closeModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-hero ebaja-bg">
+                <span class="status-badge status-completed">Completed</span>
+                <h1>eBAJA EV Powertrain</h1>
+                <div class="modal-links mt-md">
+                    <a href="#" class="btn-outline">GitHub</a>
+                    <a href="#" class="btn-outline">Documentation</a>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h3>Overview</h3>
+                <p>Contributed to the Battery Management System (BMS) design and vehicle electronics integration for the eBAJA EV Competition 2025 — an off-road electric vehicle challenge.</p>
+
+                <h3>Problem</h3>
+                <p>Off-road EVs demand robust battery monitoring and thermal management under extreme vibration, variable load, and high peak-current conditions. A failure in the BMS can lead to thermal runaway or complete vehicle shutdown mid-race.</p>
+
+                <h3>Trade-offs &amp; Constraints</h3>
+                <ul class="interests-list mb-md">
+                    <li><strong>Accuracy vs. Processing Speed:</strong> Settled on a 10Hz sampling rate to prevent the main control loop from overrunning its time budget.</li>
+                    <li><strong>Battery Life vs. Telemetry:</strong> Reduced active monitoring during idle states to preserve low-voltage auxiliary power.</li>
+                    <li><strong>Constraints:</strong> Strict weight limits, competition ruleset compliance, and severe vibration resistance requirements.</li>
+                </ul>
+
+                <h3>Technologies Used</h3>
+                <div class="tags mb-md">
+                    <span class="tech-badge">BMS Design</span>
+                    <span class="tech-badge">ECU Interfacing</span>
+                    <span class="tech-badge">MATLAB Simulation</span>
+                    <span class="tech-badge">Embedded Sensors</span>
+                    <span class="tech-badge">Subsystem Wiring</span>
+                </div>
+
+                <h3>Implementation</h3>
+                <p>Contributed to BMS design for real-time monitoring of voltage and temperature across EV battery cells. Assisted in ECU interfacing, subsystem wiring, and embedded sensor integration. Performed MATLAB-based simulations to validate battery behaviour under variable load conditions.</p>
+
+                <h3>Engineering Failure Log</h3>
+                <div class="failure-log mb-md">
+                    <span style="color:var(--domain-power);">Failure:</span> Battery temperature readings fluctuated wildly under physical testing.<br><br>
+                    <span style="color:var(--domain-power);">Investigation:</span> High-frequency mechanical vibration caused intermittent contact between the thermistors and cell casings.<br><br>
+                    <span style="color:var(--domain-power);">Solution:</span> Modified sensor mounting strategy with thermal epoxy and added software low-pass filtering to smooth the ADC readings.<br><br>
+                    <span style="color:var(--domain-power);">Result:</span> Stable and reliable temperature monitoring under full dynamic load conditions.
+                </div>
+
+                <h3>System Impact</h3>
+                <ul class="interests-list mb-md">
+                    <li><strong>Reliability:</strong> Improved confidence in battery thermal monitoring under vibration-heavy operating conditions.</li>
+                    <li><strong>Maintainability:</strong> Modularized the BMS wiring harness for rapid pit-stop replacement.</li>
+                </ul>
+
+                <h3 class="improve-heading">What I Would Improve Today</h3>
+                <p>Implement a real-time telemetry system over MQTT or CAN bus to stream live cell voltage and temperature data to a pit-side dashboard, enabling early detection of thermal anomalies before they escalate during a race.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deterrent Modal -->
+    <div id="deterrent-modal" class="modal-container">
+        <div class="modal-header">
+            <button class="close-modal" onclick="closeModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-hero deterrent-bg">
+                <span class="status-badge status-prototype">Prototype</span>
+                <h1>Edge AI Animal Deterrent</h1>
+                <div class="modal-links mt-md">
+                    <a href="#" class="btn-outline">GitHub</a>
+                    <a href="#" class="btn-outline">Documentation</a>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h3>Overview</h3>
+                <p>An ML-based real-time animal detection and deterrence system using computer vision, designed to protect agricultural land from wildlife encroachment without cloud connectivity.</p>
+
+                <h3>Problem</h3>
+                <p>Crop destruction by wild animals causes significant economic loss for farmers. Traditional electric fences are dangerous, require maintenance, and are restricted in many regions.</p>
+
+                <h3>Trade-offs &amp; Constraints</h3>
+                <ul class="interests-list mb-md">
+                    <li><strong>Model Confidence vs. False Positives:</strong> Set a strict 85% confidence threshold, trading off occasional missed detections to avoid nuisance alarms.</li>
+                    <li><strong>Power Consumption vs. Inference Speed:</strong> Downsampled camera feed to 15fps to keep the CPU under thermal limits for passive cooling.</li>
+                    <li><strong>Constraints:</strong> Reliable outdoor operation under variable lighting, remote deployment with limited power budget.</li>
+                </ul>
+
+                <h3>Technologies Used</h3>
+                <div class="tags mb-md">
+                    <span class="tech-badge">Computer Vision</span>
+                    <span class="tech-badge">Machine Learning</span>
+                    <span class="tech-badge">Raspberry Pi</span>
+                    <span class="tech-badge">OpenCV</span>
+                    <span class="tech-badge">ESP32</span>
+                    <span class="tech-badge">PCB Design</span>
+                </div>
+
+                <h3>Implementation</h3>
+                <p>Built an ML-based real-time animal detection pipeline. The system processes live camera input, classifies detected animals, and triggers automated deterrent mechanisms based on detection output. Detection logic was designed to minimise false positives in real agricultural environments.</p>
+
+                <h3>Engineering Failure Log</h3>
+                <div class="failure-log mb-md">
+                    <span style="color:var(--domain-embedded);">Failure:</span> Continuous false-positive triggers during the night.<br><br>
+                    <span style="color:var(--domain-embedded);">Investigation:</span> IR illumination caused specular reflections on wet leaves, which the baseline model misinterpreted as animal shapes.<br><br>
+                    <span style="color:var(--domain-embedded);">Solution:</span> Augmented the training dataset with IR-specific agricultural background images and tuned confidence thresholds.<br><br>
+                    <span style="color:var(--domain-embedded);">Result:</span> Nighttime false-positive rate dropped to near zero, maintaining &gt;90% true-positive accuracy.
+                </div>
+
+                <h3>System Impact</h3>
+                <ul class="interests-list mb-md">
+                    <li><strong>Scalability:</strong> Proved viability of a low-cost, edge-based alternative to expensive electric fencing.</li>
+                    <li><strong>Reliability:</strong> Reduced nighttime false-positive triggers to near-zero, ensuring the deterrent only fires on genuine threats.</li>
+                </ul>
+
+                <h3 class="improve-heading">What I Would Improve Today</h3>
+                <p>Migrate the inference pipeline to a dedicated edge AI accelerator (Coral Edge TPU) to reduce latency and power consumption, making the system viable for long-term solar-powered deployment in remote fields.</p>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /#modal-overlay -->
+
+<!-- ─── SCRIPTS ───────────────────────────────────────────── -->
+<script type="module" src="./js/main.js"></script>
+<script src="./js/utils/scroll.js" type="module"></script>
+<script src="./js/utils/theme.js" type="module"></script>
+<script src="./js/components/tilt.js" type="module"></script>
+
+<script>
+    // ── Modal Logic ──────────────────────────────────────────
+    function openModal(id) {
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.add('active');
+        document.querySelectorAll('.modal-container').forEach(m => m.classList.remove('active'));
+        const modal = document.getElementById(id);
+        if (modal) modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.remove('active');
+        document.querySelectorAll('.modal-container').forEach(m => m.classList.remove('active'));
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ── Hamburger → Mobile Menu ──────────────────────────────
+    const hamburger   = document.getElementById('hamburger');
+    const mobileMenu  = document.getElementById('mobile-menu');
+
+    if (hamburger && mobileMenu) {
+        hamburger.addEventListener('click', () => {
+            const isOpen = mobileMenu.classList.toggle('open');
+            hamburger.classList.toggle('open', isOpen);
+            hamburger.setAttribute('aria-expanded', isOpen);
+            document.body.style.overflow = isOpen ? 'hidden' : '';
         });
 
-        // Hamburger menu
-        const hamburger = document.getElementById('hamburger');
-        const mainNav = document.getElementById('main-nav');
-        if (hamburger && mainNav) {
-            hamburger.addEventListener('click', () => {
-                hamburger.classList.toggle('open');
-                mainNav.classList.toggle('mobile-open');
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('open');
+                hamburger.classList.remove('open');
+                hamburger.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
             });
-            // Close nav when a link is clicked
-            mainNav.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    hamburger.classList.remove('open');
-                    mainNav.classList.remove('mobile-open');
-                });
-            });
-        }
-    </script>
+        });
+    }
+
+    // ── Keyboard accessibility for project cards ─────────────
+    document.querySelectorAll('.project-card[tabindex]').forEach(card => {
+        card.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+            }
+        });
+    });
+</script>
+
 </body>
 </html>

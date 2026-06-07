@@ -40,18 +40,26 @@ export function initBackgroundAnimation() {
     const MOUSE_RADIUS = 200;
     const MOUSE_FORCE  = 0.06;
 
-    let BG_COLOR         = '#FAFAFA';
-    let NODE_RGB         = [255, 87, 34];
-    let TRACE_RGB        = [216, 67, 21];
-    
+    // Engineering Research Platform — always dark navy background
+    // BG_COLOR is unused (canvas draws over a CSS background-color body)
+    let BG_COLOR   = '#08111F';
+    // Domain-aware node colors: Power Electronics / Embedded Systems
+    let NODE_RGB   = [249, 115, 22];   // Power Electronics orange
+    let TRACE_RGB  = [14, 165, 233];   // Embedded Systems blue
+
     function updateThemeColors() {
         const theme = document.documentElement.getAttribute('data-theme');
-        if (theme === 'dark') {
-            BG_COLOR = '#05050A';
-            TRACE_RGB = [37, 99, 235]; // Blue traces
+        
+        if (theme === 'light') {
+            // Light mode background node trace colors: softer blue/orange
+            TRACE_RGB = [14, 165, 233]; // light blue
+            NODE_RGB  = [249, 115, 22];  // light orange
+            BG_COLOR  = '#F8FAFC';       // (Not strictly drawn by canvas, but good to keep synced)
         } else {
-            BG_COLOR = '#FAFAFA';
-            TRACE_RGB = [216, 67, 21]; // Orange traces
+            // Dark mode background node trace colors
+            TRACE_RGB = [59, 130, 246];  // deep blue
+            NODE_RGB  = [249, 115, 22];  // Power orange
+            BG_COLOR  = '#08111F';
         }
     }
     updateThemeColors();
@@ -181,7 +189,14 @@ export function initBackgroundAnimation() {
             this.vx     = this.baseVx;
             this.vy     = this.baseVy;
             this.radius = Math.random() * 1.5 + 0.8;
-            this.color  = Math.random() > 0.5 ? [255, 87, 34] : [37, 99, 235];
+            // Mix domain colors: Power (orange), Embedded (blue), Industrial (green), Digital (purple)
+            const domainColors = [
+                [249, 115, 22],   // Power Electronics
+                [14,  165, 233],  // Embedded Systems
+                [16,  185, 129],  // Industrial Automation
+                [139, 92,  246],  // Digital Twins
+            ];
+            this.color = domainColors[Math.floor(Math.random() * domainColors.length)];
         }
 
         update() {
@@ -204,9 +219,9 @@ export function initBackgroundAnimation() {
         }
 
         draw(proximity) {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const nodeColor = isDark ? this.color : [255, 87, 34];
-            const baseOpacity = isDark ? 0.45 : 0.35;
+            // Always dark engineering theme — use node domain color
+            const nodeColor = this.color;
+            const baseOpacity = 0.35;
             const opacity = baseOpacity + proximity * 0.45;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
