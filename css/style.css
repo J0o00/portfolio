@@ -1775,8 +1775,8 @@ html.theme-transition *::after {
     display: flex;
   }
 
-  .theme-segmented-control {
-    display: none; /* hidden on mobile to reduce clutter */
+  .nav-actions .theme-segmented-control {
+    display: none; /* hidden in navbar on mobile to save space */
   }
 
   /* Hero — stacked, center-aligned */
