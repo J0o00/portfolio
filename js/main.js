@@ -15,9 +15,11 @@
  */
 
 import { inject } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
-// Initialize Vercel Analytics
+// Initialize Vercel Analytics and Speed Insights
 inject();
+injectSpeedInsights();
 
 // ── Core utility systems ────────────────────────────────────────────────────
 import { initBackgroundAnimation }           from './background.js';
