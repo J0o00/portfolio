@@ -90,12 +90,12 @@
     /* Engineering domain gradient: Power → Embedded */
     background: linear-gradient(
         90deg,
-        #F97316 0%,
+        var(--primary) 0%,
         #0EA5E9 100%
     );
     z-index: 9999;
     pointer-events: none;
-    box-shadow: 0 0 8px rgba(249, 115, 22, 0.6);
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -163,7 +163,7 @@
     left: 0;
     width: 0;
     height: 1px;
-    background: #F97316;
+    background: var(--primary);
     transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 

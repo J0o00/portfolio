@@ -44,21 +44,21 @@ export function initBackgroundAnimation() {
     // BG_COLOR is unused (canvas draws over a CSS background-color body)
     let BG_COLOR   = '#08111F';
     // Domain-aware node colors: Power Electronics / Embedded Systems
-    let NODE_RGB   = [249, 115, 22];   // Power Electronics orange
-    let TRACE_RGB  = [249, 115, 22];   // Embedded Systems blue
+    let NODE_RGB   = [56, 189, 248];   // Power Electronics orange
+    let TRACE_RGB  = [99, 102, 241];   // Embedded Systems blue
 
     function updateThemeColors() {
         const theme = document.documentElement.getAttribute('data-theme');
         
         if (theme === 'light') {
             // Light mode background node trace colors: softer blue/orange
-            TRACE_RGB = [249, 115, 22]; // light blue
-            NODE_RGB  = [249, 115, 22];  // light orange
+            TRACE_RGB = [37, 99, 235]; // primary blue
+            NODE_RGB  = [15, 23, 42]; // deep navy
             BG_COLOR  = '#F8FAFC';       // (Not strictly drawn by canvas, but good to keep synced)
         } else {
             // Dark mode background node trace colors
             TRACE_RGB = [59, 130, 246];  // deep blue
-            NODE_RGB  = [249, 115, 22];  // Power orange
+            NODE_RGB  = [56, 189, 248]; // Cyan
             BG_COLOR  = '#08111F';
         }
     }
@@ -191,10 +191,10 @@ export function initBackgroundAnimation() {
             this.radius = Math.random() * 1.5 + 0.8;
             // Mix domain colors: Power (orange), Embedded (blue), Industrial (green), Digital (purple)
             const domainColors = [
-                [249, 115, 22],   // Power Electronics
-                [249, 115, 22],  // Embedded Systems
-                [249, 115, 22],  // Industrial Automation
-                [249, 115, 22],  // Digital Twins
+                [56, 189, 248],   // Cyan (eBAJA)
+                [99, 102, 241],  // Indigo (Research)
+                [16, 185, 129],  // Green (Siemens)
+                [139, 92, 246],  // Purple (Patent)
             ];
             this.color = domainColors[Math.floor(Math.random() * domainColors.length)];
         }

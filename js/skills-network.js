@@ -77,7 +77,7 @@ export function initSkillsNetwork() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         if (isDark) {
             return {
-                control:      { node: '#F97316', text: '#FDBA74', line: 'rgba(249, 115, 22,0.25)' },
+                control:      { node: '#38BDF8', text: '#BAE6FD', line: 'rgba(56, 189, 248,0.25)' },
                 hardware:     { node: '#06B6D4', text: '#67E8F9', line: 'rgba(6,182,212,0.25)'  },
                 intelligence: { node: '#D946EF', text: '#F0ABFC', line: 'rgba(217,70,239,0.25)' },
             };
