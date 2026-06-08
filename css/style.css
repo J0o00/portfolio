@@ -1287,7 +1287,7 @@ p {
 /* ── 18. PHILOSOPHY / PRINCIPLE CARDS ────────────────────── */
 .philosophy-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  /* grid-template-columns managed by media queries */
   gap: var(--space-lg);
 }
 
@@ -1843,8 +1843,8 @@ html.theme-transition *::after {
   }
 
   .hero-name {
-    font-size: clamp(3rem, 12vw, 5rem);
-  }
+  font-size: clamp(2.8rem, 10vw, 7rem);
+}
 
   .hero-statement {
     font-size: 0.9rem;
@@ -1870,7 +1870,9 @@ html.theme-transition *::after {
   }
 
   /* Section type scales */
-  .section-title { font-size: 1.8rem; }
+  .section-title {
+  font-size: clamp(1.8rem, 5vw, 3.5rem);
+}
   .hero-name { line-height: 1; }
 
   /* Metrics */
@@ -2709,3 +2711,100 @@ html.theme-transition *::after {
   color: #0F172A;
 }
 
+
+
+/* ==========================================================================
+   USER REQUESTED MOBILE-FIRST OPTIMIZATIONS
+   ========================================================================== */
+
+/* 2. Patent Hero Card & 3. Research Cards Tablet */
+@media (min-width: 1025px) {
+  .research-notebook { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  /* 2. Patent Hero Card */
+  .hero-patent-card {
+    min-height: 360px;
+    padding: 2rem;
+  }
+  /* 3. Research Cards */
+  .research-notebook {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  /* 10. Modal Width */
+  .modal-container {
+    max-width: 90vw;
+  }
+}
+
+@media (max-width: 768px) {
+  /* 2. Patent Hero Card */
+  .hero-patent-card {
+    min-height: 280px;
+    padding: 1.5rem;
+  }
+  /* 3. Research Cards */
+  .research-notebook {
+    grid-template-columns: 1fr;
+  }
+  /* 4. Featured Work Cards */
+  .premium-featured-card {
+    aspect-ratio: 4/5;
+    min-height: auto;
+  }
+  /* 5. Patent Modal */
+  .modal-container {
+    height: 90vh;
+    overflow-y: auto;
+    max-width: 95vw; /* 10. Modal width */
+  }
+  .modal-overlay {
+    padding: 1rem 0.5rem; /* reduce huge padding on mobile */
+  }
+  /* 6. Floating Navbar */
+  .nav-wrapper {
+    width: 100%;
+    top: 0;
+    border-radius: 0;
+  }
+  .glass-nav {
+    border-radius: 0;
+  }
+  /* 7. Domain Chips horizontal scroll */
+  .domains-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 1rem;
+    grid-template-columns: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .domains-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .domain-card {
+    scroll-snap-align: start;
+    min-width: 260px;
+    flex-shrink: 0;
+  }
+}
+
+/* 9. Disable hover interactions on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .project-card:hover,
+  .hero-patent-card:hover,
+  .premium-featured-card:hover,
+  .domain-card:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+  
+  .project-card:active,
+  .hero-patent-card:active,
+  .premium-featured-card:active,
+  .domain-card:active {
+    transform: scale(0.98) !important;
+    transition: transform 0.1s ease !important;
+  }
+}
