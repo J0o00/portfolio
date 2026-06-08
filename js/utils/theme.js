@@ -71,6 +71,9 @@ export function applyTheme() {
     window.dispatchEvent(new CustomEvent('themeChanged', {
         detail: { theme: resolvedTheme, mode: savedMode }
     }));
+    
+    // Force UnicornStudio to re-render its iframe canvases
+    refreshUnicornStudio();
 }
 
 /**
@@ -97,6 +100,27 @@ function updateGreeting() {
     else if (hour >= 12 && hour < 17) greetingEl.textContent = 'Good Afternoon,';
     else if (hour >= 17 && hour < 21) greetingEl.textContent = 'Good Evening,';
     else                               greetingEl.textContent = 'Good Night,';
+}
+
+/**
+ * refreshUnicornStudio()
+ * Forces the UnicornStudio WebGL canvas to re-initialize and bypass caching
+ * when the theme is toggled.
+ */
+function refreshUnicornStudio() {
+    if (window.UnicornStudio && window.UnicornStudio.isInitialized) {
+        // Find all injected UnicornStudio iframes and force them to reload
+        const iframes = document.querySelectorAll('.unicorn-bg iframe');
+        iframes.forEach(iframe => {
+            // Force the iframe to reload its source, triggering a fresh WebGL paint
+            const currentSrc = iframe.src;
+            iframe.src = '';
+            iframe.src = currentSrc;
+        });
+        
+        // Call init again just in case the wrapper lost state
+        window.UnicornStudio.init();
+    }
 }
 
 // Auto-init on DOM ready

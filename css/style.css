@@ -6,11 +6,16 @@
 /* ── 1. DESIGN TOKENS ─────────────────────────────────────── */
 :root {
   /* Layered Navy Background System */
-  --bg-main:       #08111F;
+  --page-bg:       #08111F;
+  --bg-main:       transparent;
   --bg-secondary:  #0B1324;
   --bg-surface:    #111C30;
   --bg-card:       #162033;
   --bg-primary:    var(--bg-main);
+
+  /* Section Backgrounds */
+  --section-bg-main: transparent;
+  --section-bg-secondary: rgba(255, 255, 255, 0.02);
 
   /* Material System */
   --glass-bg:      rgba(255, 255, 255, 0.04);
@@ -93,7 +98,8 @@
 
 /* ── 2a. EXPLICIT DARK (aliases :root — no changes needed) ── */
 [data-theme="dark"] {
-  --bg-main:       #08111F;
+  --page-bg:       #08111F;
+  --bg-main:       transparent;
   --bg-secondary:  #0B1324;
   --bg-surface:    #111C30;
   --bg-card:       #162033;
@@ -112,27 +118,34 @@
   --modal-bg:      #0E1929;
   --nav-bg:        rgba(8, 17, 31, 0.65);
   --nav-hover:     rgba(255, 255, 255, 0.06);
+
+  /* Section Backgrounds */
+  --section-bg-main: transparent;
+  --section-bg-secondary: rgba(255, 255, 255, 0.02);
 }
 
 /* ── 2b. GENUINE LIGHT MODE ───────────────────────────────── */
 [data-theme="light"] {
-  /* Backgrounds — layered slate-white hierarchy */
-  --bg-main:       #F8FAFC;
-  --bg-secondary:  #F1F5F9;
-  --bg-surface:    #FFFFFF;
-  --bg-card:       #FFFFFF;
+  /* ── Premium Apple / Linear Color System ── */
+  --page-bg:       #F8FAFC; /* Base layer behind Unicorn */
+  --bg-main:       transparent; /* Body must be transparent to see Unicorn */
+  --bg-section:    transparent; /* Sections transparent */
+  --bg-card:       rgba(255, 255, 255, 0.55);
 
-  /* Text — dark slate for strong contrast */
-  --text-heading:  #0F172A;
+  --text-primary:  #0F172A;
+  --text-secondary:#334155;
   --text-body:     #475569;
-  --text-muted:    #94A3B8;
+  --text-muted:    #64748B;
 
-  /* Glass / Borders — dark-on-light */
-  --glass-bg:      rgba(0, 0, 0, 0.03);
-  --glass-border:  rgba(0, 0, 0, 0.08);
-  --glass-edge:    rgba(0, 0, 0, 0.05);
-  --border-color:  rgba(0, 0, 0, 0.08);
-  --border-subtle: rgba(0, 0, 0, 0.04);
+  --border-light:  rgba(15,23,42,0.08);
+
+  --shadow-light:  0 10px 40px rgba(15,23,42,0.08);
+  --shadow-hover:  0 20px 60px rgba(15,23,42,0.12);
+
+  /* Map old vars to new system to ensure architecture doesn't break */
+  --text-heading:  var(--text-primary);
+  --border-color:  var(--border-light);
+  --border-subtle: rgba(15,23,42,0.04);
 
   /* Shadows — stronger, more visible on white */
   --shadow-1: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -144,9 +157,20 @@
   --modal-bg:      #FFFFFF;
 
   /* Nav */
-  --nav-bg:        rgba(248, 250, 252, 0.80);
-  --nav-hover:     rgba(0, 0, 0, 0.05);
+  --nav-bg:        rgba(255, 255, 255, 0.45);
+  --nav-hover:     rgba(255, 255, 255, 0.55);
 }
+
+/* Navbar Apple-style floating glass */
+[data-theme="light"] .glass-nav {
+  background: var(--nav-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+}
+
+/* Removed the ::before readability layer because it was causing a giant gray veil over the entire page. UnicornStudio animation will now be 100% visible. */
 
 /* ── 3. RESET & BASE ──────────────────────────────────────── */
 *, *::before, *::after {
@@ -158,6 +182,7 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  background-color: var(--page-bg, #0B1120); /* Fallback to dark if var missing */
 }
 
 body {
@@ -171,13 +196,34 @@ body {
 
 /* ── 4. BACKGROUND CANVAS ─────────────────────────────────── */
 #bg-canvas {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.6;
+  display: none !important;
 }
+
+/* UnicornStudio Tailwind Utilities Mapping */
+.unicorn-bg.absolute { position: fixed; }
+.unicorn-bg .absolute { position: absolute; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.z-0 { z-index: -2; }
+.overflow-hidden { overflow: hidden; }
+.pointer-events-none { pointer-events: none; }
+.opacity-60 { opacity: 0.6; }
+.mix-blend-screen { mix-blend-mode: screen; }
+
+[data-theme="light"] .unicorn-dark {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+[data-theme="dark"] .unicorn-light {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* No overrides needed, tailwind utility classes removed from HTML */
 
 /* ── 5. TYPOGRAPHY ────────────────────────────────────────── */
 h1, h2, h3, h4, h5 {
@@ -266,13 +312,13 @@ p {
 
 /* Alternating section backgrounds */
 #about, #featured, #metrics, #philosophy {
-  background-color: var(--bg-secondary);
-  box-shadow: 0 0 0 100vmax var(--bg-secondary);
+  background-color: var(--section-bg-secondary);
+  box-shadow: 0 0 0 100vmax var(--section-bg-secondary);
   clip-path: inset(0 -100vmax);
 }
 #research, #skills, #experience, #contact, #hero {
-  background-color: var(--bg-main);
-  box-shadow: 0 0 0 100vmax var(--bg-main);
+  background-color: var(--section-bg-main);
+  box-shadow: 0 0 0 100vmax var(--section-bg-main);
   clip-path: inset(0 -100vmax);
 }
 
@@ -1959,31 +2005,68 @@ html.theme-transition *::after {
    All rules scoped to [data-theme="light"] so they never fire in dark.
    ══════════════════════════════════════════════════════════════════ */
 
-/* Section bands */
-[data-theme="light"] #about,
-[data-theme="light"] #featured,
-[data-theme="light"] #metrics,
-[data-theme="light"] #philosophy {
-  background-color: var(--bg-secondary);
-  box-shadow: 0 0 0 100vmax var(--bg-secondary);
-}
-[data-theme="light"] #research,
-[data-theme="light"] #skills,
-[data-theme="light"] #experience,
-[data-theme="light"] #contact,
-[data-theme="light"] #hero {
-  background-color: var(--bg-main);
-  box-shadow: 0 0 0 100vmax var(--bg-main);
+/* Section bands removed to allow UnicornStudio animation to flow continuously behind all content */
+/* Clean Typography - No heavy glow */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] p,
+[data-theme="light"] span,
+[data-theme="light"] a,
+[data-theme="light"] li {
+  text-shadow: none;
 }
 
-/* Project cards — white surface with stronger shadow */
-[data-theme="light"] .project-card {
-  background: #FFFFFF;
-  border-color: rgba(0, 0, 0, 0.08);
+[data-theme="light"] p,
+[data-theme="light"] li,
+[data-theme="light"] span {
+  color: var(--text-body);
 }
+
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .section-label {
+  color: #F97316;
+}
+[data-theme="light"] .timeline-date,
+[data-theme="light"] .research-meta {
+  color: var(--text-muted);
+}
+
+/* Hero Name */
+[data-theme="light"] #hero h1 {
+  color: #0F172A;
+  text-shadow: 0 1px 6px rgba(255,255,255,0.15);
+}
+
+/* Hero subtitle */
+[data-theme="light"] #hero p {
+  color: #334155;
+}
+
+/* Project cards — crisp clear surface */
+[data-theme="light"] .project-card {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
+}
+[data-theme="light"] .project-card[data-domain="power"] { border-top: 2px solid #F97316; }
+[data-theme="light"] .project-card[data-domain="embedded"] { border-top: 2px solid #0EA5E9; }
+[data-theme="light"] .project-card[data-domain="industrial"] { border-top: 2px solid #10B981; }
+[data-theme="light"] .project-card[data-domain="digital"] { border-top: 2px solid #8B5CF6; }
+[data-theme="light"] .project-card[data-domain="ai"] { border-top: 2px solid #EC4899; }
 [data-theme="light"] .project-card:hover {
-  box-shadow: var(--shadow-3);
-  border-color: rgba(0, 0, 0, 0.15);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(15,23,42,0.12);
 }
 [data-theme="light"] .project-card::before {
   background: linear-gradient(90deg, transparent, rgba(0,0,0,0.04), transparent);
@@ -2008,29 +2091,28 @@ html.theme-transition *::after {
 
 /* Status badges in light mode */
 [data-theme="light"] .status-research {
-  background: rgba(255, 255, 255, 0.9);
-  color: #6D28D9;
-  border-color: rgba(139, 92, 246, 0.4);
-  box-shadow: var(--shadow-1);
+  background: #EEF2FF;
+  color: #4338CA;
+  border: none;
 }
 [data-theme="light"] .status-completed {
-  background: rgba(255, 255, 255, 0.9);
+  background: #ECFDF5;
   color: #047857;
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: var(--shadow-1);
+  border: none;
 }
 [data-theme="light"] .status-prototype {
-  background: rgba(255, 255, 255, 0.9);
+  background: #FFF7ED;
   color: #C2410C;
-  border-color: rgba(249, 115, 22, 0.4);
-  box-shadow: var(--shadow-1);
+  border: none;
 }
 
 /* NVIDIA research cards */
 [data-theme="light"] .nvidia-card {
-  background: #FFFFFF;
-  border-color: rgba(0,0,0,0.08);
-  box-shadow: var(--shadow-1);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
 }
 [data-theme="light"] .nvidia-card:hover {
   box-shadow: var(--shadow-2);
@@ -2050,18 +2132,23 @@ html.theme-transition *::after {
 
 /* Patent card */
 [data-theme="light"] .patent-card {
-  background: #FFFFFF;
-  border-color: rgba(139, 92, 246, 0.25);
-  box-shadow: var(--shadow-2);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
 }
 [data-theme="light"] .patent-stage {
-  background: rgba(0,0,0,0.02);
-  border-color: rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
 }
 [data-theme="light"] .patent-stage:hover {
-  background: rgba(0,0,0,0.04);
-  border-color: rgba(0,0,0,0.16);
-  box-shadow: var(--shadow-1);
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.8);
+  box-shadow: var(--shadow-hover);
 }
 
 @media (min-width: 769px) {
@@ -2074,9 +2161,11 @@ html.theme-transition *::after {
 
 /* Timeline */
 [data-theme="light"] .timeline-item {
-  background: #FFFFFF;
-  border-color: rgba(0,0,0,0.08);
-  box-shadow: var(--shadow-1);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
 }
 [data-theme="light"] .timeline-item:hover {
   border-color: rgba(14, 165, 233, 0.3);
@@ -2085,24 +2174,26 @@ html.theme-transition *::after {
 
 /* Philosophy cards */
 [data-theme="light"] .phil-card {
-  background: #FFFFFF;
-  border-color: rgba(0,0,0,0.08);
-  box-shadow: var(--shadow-1);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
 }
 [data-theme="light"] .phil-card:hover {
   background: #FAFEFF;
   border-color: rgba(0,0,0,0.12);
 }
 
-/* Knowledge nodes */
-[data-theme="light"] .knowledge-node {
-  background: #FFFFFF;
-  border-color: rgba(0,0,0,0.1);
-  color: var(--text-body);
-  box-shadow: var(--shadow-1);
-}
-[data-theme="light"] .knowledge-node::before {
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.06), transparent);
+/* Engineering Capabilities (Knowledge nodes & tech badges) */
+[data-theme="light"] .knowledge-node,
+[data-theme="light"] .tech-badge {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
+  color: #0F172A;
 }
 
 /* Glass chips in hero */
