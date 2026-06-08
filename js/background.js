@@ -45,14 +45,14 @@ export function initBackgroundAnimation() {
     let BG_COLOR   = '#08111F';
     // Domain-aware node colors: Power Electronics / Embedded Systems
     let NODE_RGB   = [249, 115, 22];   // Power Electronics orange
-    let TRACE_RGB  = [14, 165, 233];   // Embedded Systems blue
+    let TRACE_RGB  = [249, 115, 22];   // Embedded Systems blue
 
     function updateThemeColors() {
         const theme = document.documentElement.getAttribute('data-theme');
         
         if (theme === 'light') {
             // Light mode background node trace colors: softer blue/orange
-            TRACE_RGB = [14, 165, 233]; // light blue
+            TRACE_RGB = [249, 115, 22]; // light blue
             NODE_RGB  = [249, 115, 22];  // light orange
             BG_COLOR  = '#F8FAFC';       // (Not strictly drawn by canvas, but good to keep synced)
         } else {
@@ -192,9 +192,9 @@ export function initBackgroundAnimation() {
             // Mix domain colors: Power (orange), Embedded (blue), Industrial (green), Digital (purple)
             const domainColors = [
                 [249, 115, 22],   // Power Electronics
-                [14,  165, 233],  // Embedded Systems
-                [16,  185, 129],  // Industrial Automation
-                [139, 92,  246],  // Digital Twins
+                [249, 115, 22],  // Embedded Systems
+                [249, 115, 22],  // Industrial Automation
+                [249, 115, 22],  // Digital Twins
             ];
             this.color = domainColors[Math.floor(Math.random() * domainColors.length)];
         }

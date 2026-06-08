@@ -34,17 +34,17 @@
 
   /* Engineering Domain Colors */
   --domain-power:      #F97316;
-  --domain-embedded:   #0EA5E9;
-  --domain-industrial: #10B981;
-  --domain-digital:    #8B5CF6;
-  --domain-ai:         #EC4899;
+  --domain-embedded:   #F97316;
+  --domain-industrial: #F97316;
+  --domain-digital:    #F97316;
+  --domain-ai:         #F97316;
 
   /* Glow variants (30% opacity versions for shadows) */
   --glow-power:      rgba(249, 115, 22,  0.30);
-  --glow-embedded:   rgba(14,  165, 233, 0.30);
-  --glow-industrial: rgba(16,  185, 129, 0.30);
-  --glow-digital:    rgba(139, 92,  246, 0.30);
-  --glow-ai:         rgba(236, 72,  153, 0.30);
+  --glow-embedded:   rgba(249, 115, 22, 0.30);
+  --glow-industrial: rgba(249, 115, 22, 0.30);
+  --glow-digital:    rgba(249, 115, 22, 0.30);
+  --glow-ai:         rgba(249, 115, 22, 0.30);
 
   /* Default accent — Power Electronics */
   --accent-primary: var(--domain-power);
@@ -63,7 +63,7 @@
   --modal-bg:      #0E1929;
 
   /* Canvas */
-  --canvas-grid:   rgba(14, 165, 233, 0.04);
+  --canvas-grid:   rgba(249, 115, 22, 0.04);
 
   /* Typography */
   --font-heading: 'Inter', -apple-system, sans-serif;
@@ -294,14 +294,7 @@ p {
   color: var(--text-heading);
 }
 
-.section-title::after {
-  content: '';
-  display: block;
-  width: 32px;
-  height: 2px;
-  margin-top: 12px;
-  background: linear-gradient(90deg, var(--accent-primary), transparent);
-}
+
 
 .subsection-title {
   font-size: 1.3rem;
@@ -663,25 +656,25 @@ p {
 .glass-chip.domain-embedded:hover {
   border-color: var(--domain-embedded);
   color: var(--domain-embedded);
-  box-shadow: 0 0 16px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.2);
   transform: translateY(-2px);
 }
 .glass-chip.domain-industrial:hover {
   border-color: var(--domain-industrial);
   color: var(--domain-industrial);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.2);
   transform: translateY(-2px);
 }
 .glass-chip.domain-digital:hover {
   border-color: var(--domain-digital);
   color: var(--domain-digital);
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.2);
   transform: translateY(-2px);
 }
 .glass-chip.domain-ai:hover {
   border-color: var(--domain-ai);
   color: var(--domain-ai);
-  box-shadow: 0 0 16px rgba(236, 72, 153, 0.2);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.2);
   transform: translateY(-2px);
 }
 
@@ -692,9 +685,9 @@ p {
   font-size: 0.7rem;
   padding: 0.25rem 0.7rem;
   border-radius: 999px;
-  background: rgba(14, 165, 233, 0.08);
+  background: rgba(249, 115, 22, 0.08);
   color: var(--domain-embedded);
-  border: 1px solid rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(249, 115, 22, 0.2);
   margin-bottom: var(--space-md);
 }
 
@@ -784,10 +777,7 @@ p {
   letter-spacing: -0.04em;
 }
 
-.metric-item:nth-child(1) .metric-number { color: var(--domain-power); }
-.metric-item:nth-child(2) .metric-number { color: var(--domain-embedded); }
-.metric-item:nth-child(3) .metric-number { color: var(--domain-industrial); }
-.metric-item:nth-child(4) .metric-number { color: var(--domain-digital); }
+
 
 .metric-label {
   font-size: 0.8rem;
@@ -915,9 +905,9 @@ p {
 }
 
 /* Domain-aware hover glows */
-.project-card[data-related~="industrial"]:hover { border-color: rgba(16, 185, 129, 0.3); }
+.project-card[data-related~="industrial"]:hover { border-color: rgba(249, 115, 22, 0.3); }
 .project-card[data-related~="power"]:hover      { border-color: rgba(249, 115, 22, 0.3); }
-.project-card[data-related~="embedded"]:hover   { border-color: rgba(14, 165, 233, 0.3); }
+.project-card[data-related~="embedded"]:hover   { border-color: rgba(249, 115, 22, 0.3); }
 
 .card-visual {
   height: 200px;
@@ -1059,8 +1049,8 @@ p {
   letter-spacing: 0.06em;
 }
 
-.status-research  { background: rgba(139, 92, 246, 0.15); color: #C4B5FD; border: 1px solid rgba(139, 92, 246, 0.3); }
-.status-completed { background: rgba(16, 185, 129, 0.15); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.3); }
+.status-research  { background: rgba(249, 115, 22, 0.15); color: #FDBA74; border: 1px solid rgba(249, 115, 22, 0.3); }
+.status-completed { background: rgba(249, 115, 22, 0.15); color: #FDBA74; border: 1px solid rgba(249, 115, 22, 0.3); }
 .status-prototype { background: rgba(249, 115, 22, 0.15); color: #FED7AA; border: 1px solid rgba(249, 115, 22, 0.3); }
 
 /* ── 15. TECH BADGES ──────────────────────────────────────── */
@@ -1098,7 +1088,7 @@ p {
 /* Patent Card — full-width premium panel */
 .patent-card {
   background: var(--bg-card);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(249, 115, 22, 0.2);
   border-radius: 16px;
   padding: 2.5rem;
   position: relative;
@@ -1112,7 +1102,7 @@ p {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.4), transparent);
   z-index: 2;
 }
 
@@ -1415,7 +1405,7 @@ p {
 }
 
 .timeline-item:hover {
-  border-color: rgba(14, 165, 233, 0.25);
+  border-color: rgba(249, 115, 22, 0.25);
   box-shadow: var(--shadow-1);
 }
 
@@ -1427,7 +1417,7 @@ p {
   border-radius: 50%;
   background: var(--domain-embedded);
   border: 2px solid var(--bg-main);
-  box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
 }
 
 .timeline-content h3 {
@@ -1446,7 +1436,7 @@ p {
   text-transform: uppercase;
 }
 
-/* ── 21. FULLSCREEN MODALS ────────────────────────────────── */
+/* ── 21. FLOATING OVAL MODALS ────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -1456,6 +1446,7 @@ p {
   z-index: 2000;
   display: none;
   overflow-y: auto;
+  padding: 4rem 1rem; /* Breathing room so it floats */
 }
 
 .modal-overlay.active { display: block; }
@@ -1464,8 +1455,14 @@ p {
   display: none;
   background: var(--modal-bg);
   width: 100%;
-  min-height: 100vh;
+  max-width: 900px;
+  min-height: auto;
+  margin: 0 auto;
+  border-radius: 32px; /* Oval box feel */
   position: relative;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  border: 1px solid var(--glass-border);
 }
 
 .modal-container.active { display: block; }
@@ -2059,10 +2056,10 @@ html.theme-transition *::after {
   box-shadow: 0 10px 40px rgba(15,23,42,0.08);
 }
 [data-theme="light"] .project-card[data-domain="power"] { border-top: 2px solid #F97316; }
-[data-theme="light"] .project-card[data-domain="embedded"] { border-top: 2px solid #0EA5E9; }
-[data-theme="light"] .project-card[data-domain="industrial"] { border-top: 2px solid #10B981; }
-[data-theme="light"] .project-card[data-domain="digital"] { border-top: 2px solid #8B5CF6; }
-[data-theme="light"] .project-card[data-domain="ai"] { border-top: 2px solid #EC4899; }
+[data-theme="light"] .project-card[data-domain="embedded"] { border-top: 2px solid #F97316; }
+[data-theme="light"] .project-card[data-domain="industrial"] { border-top: 2px solid #F97316; }
+[data-theme="light"] .project-card[data-domain="digital"] { border-top: 2px solid #F97316; }
+[data-theme="light"] .project-card[data-domain="ai"] { border-top: 2px solid #F97316; }
 [data-theme="light"] .project-card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-hover);
@@ -2168,7 +2165,7 @@ html.theme-transition *::after {
   box-shadow: 0 10px 40px rgba(15,23,42,0.08);
 }
 [data-theme="light"] .timeline-item:hover {
-  border-color: rgba(14, 165, 233, 0.3);
+  border-color: rgba(249, 115, 22, 0.3);
   box-shadow: var(--shadow-2);
 }
 
@@ -2491,5 +2488,217 @@ html.theme-transition *::after {
     color 0.3s ease,
     box-shadow 0.3s ease !important;
   transition-delay: 0s !important;
+}
+
+
+
+/* ── PREMIUM CINEMATIC CARDS ────────────────────────────────────── */
+
+/* Base Premium Card (Featured Work & Generic Cinematic) */
+.premium-card {
+  position: relative;
+  min-height: 420px;
+  border-radius: 28px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  will-change: transform;
+  text-decoration: none;
+}
+
+.premium-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+}
+
+/* Patent Hero Card (Largest, Full Width) */
+.hero-patent-card {
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  border-radius: 32px;
+  background-image: url('/patent-diagram.png');
+  background-size: cover;
+  background-position: right center;
+  background-repeat: no-repeat;
+  background-color: #111; /* Fallback for very wide screens */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.3);
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.hero-patent-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.4);
+}
+
+/* Dark Cinematic Overlay */
+.premium-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.75));
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Because patent-bg.png is naturally very dark, we reduce the overlay significantly */
+.hero-patent-card .premium-overlay {
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35));
+}
+
+/* Content Container */
+.premium-content {
+  position: relative;
+  z-index: 2;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.premium-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: auto;
+}
+
+.premium-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Glass Badges */
+.glass-badge {
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Premium Typography */
+.premium-title {
+  color: white;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
+}
+
+.premium-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+/* Research Notebook Hybrid Cards */
+.research-notebook-card {
+  position: relative;
+  min-height: 320px;
+  border-radius: 24px;
+  background-image: url('/research-bg.png');
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.research-notebook-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.research-notebook-card .premium-overlay {
+  background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.6));
+}
+
+.research-notebook-card .premium-title {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  letter-spacing: -0.02em;
+}
+
+/* Light Mode Overrides */
+[data-theme="light"] .hero-patent-card {
+  background-image: url('/patent-bg.png');
+}
+
+[data-theme="light"] .premium-card,
+[data-theme="light"] .hero-patent-card,
+[data-theme="light"] .research-notebook-card {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] .premium-card:hover,
+[data-theme="light"] .hero-patent-card:hover,
+[data-theme="light"] .research-notebook-card:hover {
+  box-shadow: 0 30px 80px rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] .premium-overlay {
+  background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.55));
+}
+
+[data-theme="light"] .hero-patent-card .premium-overlay {
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.25));
+}
+
+/* Make sure text stays white in light mode to contrast with dark overlay */
+[data-theme="light"] .premium-title {
+  color: white;
+}
+[data-theme="light"] .premium-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Glass Badge override for Light Mode (surface style) */
+[data-theme="light"] .glass-badge {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #0F172A; /* Dark text for light badge */
+}
+
+/* In light mode, if badge is over dark image, we might need white text. 
+   But user requested "Card Surface: rgba(255,255,255,0.72)... Text: white over image areas".
+   Actually, let's follow user: Text white over image areas. So the badge itself is a glass surface.
+*/
+[data-theme="light"] .glass-badge.badge-dark-text {
+  color: #0F172A;
 }
 

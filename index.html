@@ -182,139 +182,26 @@
 </section>
 
 <!-- ─── RESEARCH & INNOVATION ──────────────────────────── -->
-<section id="research" class="container fade-in" style="--stagger:1" aria-labelledby="research-title">
-    <span class="section-label">Intellectual Contribution</span>
-    <h2 class="section-title" id="research-title">Research &amp; Innovation</h2>
 
-    <div class="research-grid">
-
-        <!-- Patent Platform Card -->
-        <div class="patent-card">
-            <div class="mb-sm">
-                <span class="status-badge status-research">Patent App: 202641051670</span>
+<!-- ─── PATENT HERO ──────────────────────────── -->
+<section id="patent" class="container fade-in" style="--stagger:1" aria-labelledby="patent-title">
+    <div class="hero-patent-card" data-tilt onclick="openModal('patent-modal')" role="button" tabindex="0">
+        <div class="premium-overlay"></div>
+        <div class="premium-content">
+            <div class="premium-top">
+                <div class="premium-badges">
+                    <span class="glass-badge">Patent Filed</span>
+                    <span class="glass-badge">Research &amp; Innovation</span>
+                </div>
             </div>
-            <h3 style="font-size: clamp(1.3rem,3vw,1.8rem); margin-bottom: 0.75rem; color: var(--text-heading);">
-                Context-Aware Digital Triplet System
-            </h3>
-            <p style="max-width:760px; margin-bottom: 2rem;">
-                A three-layer "triplet" architecture that closes the loop between physical state, virtual model, 
-                and real-time control. Eliminates the read-only limitation of conventional digital twins by 
-                integrating direct actuation pathways — preempting thermal runaway in heavy industrial drives 
-                and EV powertrains before failure occurs.
-            </p>
-
-            <!-- Horizontal Architecture Flow -->
-            <div class="patent-flow-horizontal" role="list" aria-label="System architecture stages">
-
-                <div class="patent-stage" role="listitem">
-                    <h4 style="color: var(--domain-power);">Sensors</h4>
-                    <p style="font-size:0.78rem; margin-top:0.4rem;">Physical layer</p>
-                    <div class="patent-hover-info">
-                        <strong>Physical Sensors</strong>
-                        <p>Embedded stator thermocouples and hall-effect current sensors capturing raw physical state at high frequency.</p>
-                    </div>
+            <div class="premium-bottom">
+                <h3 class="premium-title">Context-Aware<br>Digital Triplet System</h3>
+                <p class="premium-subtitle">Application No. 202641051670</p>
+                <div style="margin-top: 1.5rem;">
+                    <span class="glass-badge" style="background: rgba(255,255,255,0.2); cursor:pointer;">View Architecture →</span>
                 </div>
-
-                <div class="patent-stage-arrow" aria-hidden="true">→</div>
-
-                <div class="patent-stage" role="listitem">
-                    <h4>Edge</h4>
-                    <p style="font-size:0.78rem; margin-top:0.4rem;">Processing layer</p>
-                    <div class="patent-hover-info">
-                        <strong>Edge Processing</strong>
-                        <p>High-frequency ADC sampling, noise filtering, and feature extraction running locally on embedded hardware.</p>
-                    </div>
-                </div>
-
-                <div class="patent-stage-arrow" aria-hidden="true">→</div>
-
-                <div class="patent-stage" role="listitem" style="border-color: rgba(139,92,246,0.35);">
-                    <h4 style="color: var(--domain-digital);">Triplet</h4>
-                    <p style="font-size:0.78rem; margin-top:0.4rem;">Virtual model</p>
-                    <div class="patent-hover-info">
-                        <strong>Digital Triplet</strong>
-                        <p>Real-time physical state mapped continuously onto the virtual motor model — the novel core of this architecture.</p>
-                    </div>
-                </div>
-
-                <div class="patent-stage-arrow" aria-hidden="true">→</div>
-
-                <div class="patent-stage" role="listitem">
-                    <h4>Prediction</h4>
-                    <p style="font-size:0.78rem; margin-top:0.4rem;">Inference layer</p>
-                    <div class="patent-hover-info">
-                        <strong>Prediction Engine</strong>
-                        <p>Thermal degradation and fault trajectory inference via lightweight ML models optimized for edge deployment.</p>
-                    </div>
-                </div>
-
-                <div class="patent-stage-arrow" aria-hidden="true">→</div>
-
-                <div class="patent-stage" role="listitem" style="border-color: rgba(16,185,129,0.35);">
-                    <h4 style="color: var(--domain-industrial);">Control</h4>
-                    <p style="font-size:0.78rem; margin-top:0.4rem;">Action layer</p>
-                    <div class="patent-hover-info">
-                        <strong>Control Actions</strong>
-                        <p>Direct actuation to throttle load, switch redundant circuits, or issue safe-shutdown commands.</p>
-                    </div>
-                </div>
-
             </div>
         </div>
-
-        <!-- NVIDIA Research Notebook -->
-        <div class="research-notebook">
-
-            <div class="nvidia-card" style="--card-accent: var(--domain-power);">
-                <div class="research-meta">
-                    <span>Investigation #01</span>
-                    <span class="research-status">Initial Modeling</span>
-                </div>
-                <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-heading);">Battery State of Health Estimation</h4>
-                <p style="font-size:0.88rem; margin-bottom:1rem;">
-                    Can edge-based coulomb counting augmented with thermal correction improve SoH prediction accuracy 
-                    under variable load cycles compared to static cell datasheets?
-                </p>
-                <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <span style="width:6px; height:6px; border-radius:50%; background:var(--domain-power); flex-shrink:0;"></span>
-                    <strong style="font-size:0.78rem; color:var(--domain-power);">Next: Experimental cell validation</strong>
-                </div>
-            </div>
-
-            <div class="nvidia-card" style="--card-accent: var(--domain-embedded);">
-                <div class="research-meta">
-                    <span>Investigation #02</span>
-                    <span class="research-status">Literature Review</span>
-                </div>
-                <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-heading);">Flyback Converter Magnetics Optimization</h4>
-                <p style="font-size:0.88rem; margin-bottom:1rem;">
-                    Can transformer core geometry and gap optimization reduce converter volume by ≥25% 
-                    while maintaining efficiency above 88% across full load range?
-                </p>
-                <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <span style="width:6px; height:6px; border-radius:50%; background:var(--domain-embedded); flex-shrink:0;"></span>
-                    <strong style="font-size:0.78rem; color:var(--domain-embedded);">Next: LTspice winding simulation</strong>
-                </div>
-            </div>
-
-            <div class="nvidia-card" style="--card-accent: var(--domain-industrial);">
-                <div class="research-meta">
-                    <span>Investigation #03</span>
-                    <span class="research-status">Concept Phase</span>
-                </div>
-                <h4 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--text-heading);">Embedded ML Fault Detection in Noisy Environments</h4>
-                <p style="font-size:0.88rem; margin-bottom:1rem;">
-                    How effectively can quantized TinyML models detect transient electrical faults in 
-                    high-EMI industrial motor drive environments without cloud connectivity?
-                </p>
-                <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <span style="width:6px; height:6px; border-radius:50%; background:var(--domain-industrial); flex-shrink:0;"></span>
-                    <strong style="font-size:0.78rem; color:var(--domain-industrial);">Next: Dataset acquisition from drives</strong>
-                </div>
-            </div>
-
-        </div>
-
     </div>
 </section>
 
@@ -326,140 +213,102 @@
     <div class="projects-grid">
 
         <!-- Siemens PLC -->
-        <article class="project-card"
-                 data-tilt
-                 data-related="industrial embedded"
-                 data-domain="industrial"
-                 style="--card-glow: rgba(16, 185, 129, 0.08);"
-                 onclick="openModal('siemens-modal')"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Open Siemens PLC Automation case study">
-            <div class="card-visual siemens-visual">
-                <span class="status-badge status-completed">Completed</span>
-            </div>
-            <div class="card-content">
-                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:var(--domain-industrial);flex-shrink:0;"></span>
-                    <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--domain-industrial);text-transform:uppercase;letter-spacing:0.08em;">Industrial Automation</span>
+        <article class="premium-card" data-tilt style="background-image: url('/siemens-bg.png');" onclick="openModal('siemens-modal')" role="button" tabindex="0">
+            <div class="premium-overlay"></div>
+            <div class="premium-content">
+                <div class="premium-top">
+                    <span class="glass-badge">Industrial Automation</span>
                 </div>
-                <h3>Industrial PLC Automation</h3>
-                <p>Programmed fault-safe control sequences using Siemens TIA Portal at the Siemens Centre of Excellence, Anna University. Designed SCADA and HMI interfaces for live process supervision.</p>
-
-                <!-- Verified spec table: tool + architecture info, no invented metrics -->
-                <div class="card-spec-table" aria-label="Project specifications">
-                    <div class="card-spec-row">
-                        <span class="spec-key">PLC Platform</span>
-                        <span class="spec-value">Siemens S7-1200</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Programming</span>
-                        <span class="spec-value">TIA Portal v17</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Interface</span>
-                        <span class="spec-value">SCADA + HMI</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Architecture</span>
-                        <span class="spec-value">Ladder Logic</span>
-                    </div>
+                <div class="premium-bottom">
+                    <h3 class="premium-title" style="font-size: clamp(1.8rem, 3vw, 2.5rem);">Industrial Control Systems</h3>
+                    <p class="premium-subtitle">TIA Portal • PLC • SCADA</p>
                 </div>
             </div>
         </article>
 
         <!-- eBAJA EV -->
-        <article class="project-card"
-                 data-tilt
-                 data-related="power embedded"
-                 data-domain="power"
-                 style="--card-glow: rgba(249, 115, 22, 0.08);"
-                 onclick="openModal('ebaja-modal')"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Open eBAJA EV Battery System case study">
-            <div class="card-visual ebaja-visual">
-                <span class="status-badge status-completed">Completed</span>
-            </div>
-            <div class="card-content">
-                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:var(--domain-power);flex-shrink:0;"></span>
-                    <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--domain-power);text-transform:uppercase;letter-spacing:0.08em;">Power Electronics</span>
+        <article class="premium-card" data-tilt style="background-image: url('/ebaja-bg.png');" onclick="openModal('ebaja-modal')" role="button" tabindex="0">
+            <div class="premium-overlay"></div>
+            <div class="premium-content">
+                <div class="premium-top">
+                    <span class="glass-badge">Electric Vehicle Systems</span>
                 </div>
-                <h3>eBAJA EV Battery Management</h3>
-                <p>Contributed to BMS design for real-time voltage and temperature monitoring across EV battery cells under high-vibration off-road conditions. MATLAB thermal simulation and ECU integration.</p>
-
-                <div class="card-spec-table" aria-label="Project specifications">
-                    <div class="card-spec-row">
-                        <span class="spec-key">BMS Function</span>
-                        <span class="spec-value">Cell Voltage + Temp</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Simulation</span>
-                        <span class="spec-value">MATLAB Simulink</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Integration</span>
-                        <span class="spec-value">ECU + Subsystem Wiring</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Context</span>
-                        <span class="spec-value">eBAJA EV 2025</span>
-                    </div>
+                <div class="premium-bottom">
+                    <h3 class="premium-title" style="font-size: clamp(1.8rem, 3vw, 2.5rem);">Energy Management</h3>
+                    <p class="premium-subtitle">BMS • Simulation • Integration</p>
                 </div>
             </div>
         </article>
 
         <!-- Edge AI Deterrent -->
-        <article class="project-card"
-                 data-tilt
-                 data-related="embedded ai"
-                 data-domain="embedded"
-                 style="--card-glow: rgba(14, 165, 233, 0.08);"
-                 onclick="openModal('deterrent-modal')"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Open Edge AI Animal Deterrent case study">
-            <div class="card-visual deterrent-visual">
-                <span class="status-badge status-prototype">Prototype</span>
-            </div>
-            <div class="card-content">
-                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.6rem;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:var(--domain-embedded);flex-shrink:0;"></span>
-                    <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--domain-embedded);text-transform:uppercase;letter-spacing:0.08em;">Embedded Systems · AI</span>
+        <article class="premium-card" data-tilt style="background-image: url('/deterrent-bg.png');" onclick="openModal('deterrent-modal')" role="button" tabindex="0">
+            <div class="premium-overlay"></div>
+            <div class="premium-content">
+                <div class="premium-top">
+                    <span class="glass-badge">Edge Intelligence</span>
                 </div>
-                <h3>Edge AI Animal Deterrent</h3>
-                <p>ML-based real-time animal detection system using computer vision on embedded hardware. Sub-second inference triggers automated deterrents without cloud connectivity.</p>
-
-                <div class="card-spec-table" aria-label="Project specifications">
-                    <div class="card-spec-row">
-                        <span class="spec-key">Hardware</span>
-                        <span class="spec-value">ESP32-CAM + RPi</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Vision Library</span>
-                        <span class="spec-value">OpenCV</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Inference</span>
-                        <span class="spec-value">Edge (no cloud)</span>
-                    </div>
-                    <div class="card-spec-row">
-                        <span class="spec-key">Deterrent Type</span>
-                        <span class="spec-value">Automated Trigger</span>
-                    </div>
+                <div class="premium-bottom">
+                    <h3 class="premium-title" style="font-size: clamp(1.8rem, 3vw, 2.5rem);">Autonomous Detection</h3>
+                    <p class="premium-subtitle">Computer Vision • Raspberry Pi</p>
                 </div>
             </div>
         </article>
 
     </div>
+</section>
 
-    <div class="all-projects-cta text-center mt-xl">
-        <h3 class="subsection-title">Additional Systems</h3>
-        <p style="margin-top:0.5rem;">PLC Pharmacy Automation · ESP32 Wireless Robotic Arm · Multi-node Smart Home IoT — documented on GitHub.</p>
-        <a href="https://github.com/J0o00" target="_blank" rel="noopener" class="btn-outline mt-md">View GitHub</a>
+<!-- ─── RESEARCH NOTEBOOKS ──────────────────────────── -->
+<section id="research" class="container fade-in" style="--stagger:3" aria-labelledby="research-title">
+    <span class="section-label">Technical Investigations</span>
+    <h2 class="section-title" id="research-title">Research Notebook</h2>
+
+    <div class="projects-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+
+        <div class="research-notebook-card" data-tilt>
+            <div class="premium-overlay"></div>
+            <div class="premium-content">
+                <div class="premium-top">
+                    <span class="glass-badge">Investigation #01</span>
+                </div>
+                <div class="premium-bottom">
+                    <h4 class="premium-title">Battery State of Health Estimation</h4>
+                    <p class="premium-subtitle" style="font-size: 0.9rem; margin-top: 1rem;"><strong>Status:</strong> MATLAB Modeling</p>
+                    <p class="premium-subtitle" style="font-size: 0.9rem;"><strong>Next:</strong> Validation with Experimental Data</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="research-notebook-card" data-tilt>
+            <div class="premium-overlay"></div>
+            <div class="premium-content">
+                <div class="premium-top">
+                    <span class="glass-badge">Investigation #02</span>
+                </div>
+                <div class="premium-bottom">
+                    <h4 class="premium-title">Flyback Converter Magnetics</h4>
+                    <p class="premium-subtitle" style="font-size: 0.9rem; margin-top: 1rem;"><strong>Status:</strong> Literature Review</p>
+                    <p class="premium-subtitle" style="font-size: 0.9rem;"><strong>Next:</strong> LTspice winding simulation</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="research-notebook-card" data-tilt>
+            <div class="premium-overlay"></div>
+            <div class="premium-content">
+                <div class="premium-top">
+                    <span class="glass-badge">Investigation #03</span>
+                </div>
+                <div class="premium-bottom">
+                    <h4 class="premium-title">Embedded ML Fault Detection</h4>
+                    <p class="premium-subtitle" style="font-size: 0.9rem; margin-top: 1rem;"><strong>Status:</strong> Concept Phase</p>
+                    <p class="premium-subtitle" style="font-size: 0.9rem;"><strong>Next:</strong> Dataset acquisition from drives</p>
+                </div>
+            </div>
+        </div>
+
     </div>
 </section>
+
 
 <!-- ─── ENGINEERING DOMAINS ─────────────────────────────── -->
 <section id="domains" class="container fade-in" style="--stagger:3" aria-labelledby="domains-title">
@@ -741,6 +590,68 @@
 
 <!-- ─── MODALS ───────────────────────────────────────────── -->
 <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true">
+
+    <!-- Patent Modal -->
+    <div id="patent-modal" class="modal-container">
+        <div class="modal-header">
+            <button class="close-modal" onclick="closeModal()" aria-label="Close">×</button>
+        </div>
+        <div class="modal-content" style="padding: 2rem;">
+            <p class="mb-sm" style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">Patent Filed: 202641051670</p>
+            <h2 id="patent-modal-title" class="mb-sm">Context-Aware Digital Triplet System</h2>
+            <div class="tags mb-md">
+                <span class="tech-badge">Digital Twin</span>
+                <span class="tech-badge">Cyber-Physical</span>
+                <span class="tech-badge">Industrial IoT</span>
+            </div>
+            
+            <p>A three-layer "triplet" architecture that closes the loop between physical state, virtual model, and real-time control. Eliminates the read-only limitation of conventional digital twins by integrating direct actuation pathways — preempting thermal runaway in heavy industrial drives and EV powertrains before failure occurs.</p>
+            
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Architecture Flow</h3>
+            
+            <!-- Horizontal Architecture Flow -->
+            <div class="patent-flow-horizontal" role="list" aria-label="System architecture stages" style="margin-top: 2rem;">
+
+                <div class="patent-stage" role="listitem">
+                    <h4 style="color: var(--domain-power);">Sensors</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Physical layer</p>
+                </div>
+
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem">
+                    <h4>Edge</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Processing layer</p>
+                </div>
+
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem" style="border-color: rgba(249, 115, 22,0.35);">
+                    <h4 style="color: var(--domain-digital);">Triplet</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Virtual model</p>
+                </div>
+
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem">
+                    <h4>Prediction</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Inference layer</p>
+                </div>
+
+                <div class="patent-stage-arrow" aria-hidden="true">→</div>
+
+                <div class="patent-stage" role="listitem" style="border-color: rgba(249, 115, 22,0.35);">
+                    <h4 style="color: var(--domain-industrial);">Control</h4>
+                    <p style="font-size:0.78rem; margin-top:0.4rem;">Action layer</p>
+                </div>
+
+            </div>
+
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Novelty & Abstract</h3>
+            <p>Unlike standard twin models that only serve dashboards, this system introduces an automated inference layer that triggers physical safety overrides in milliseconds without requiring cloud round-trips. Evaluated to significantly increase asset lifespan under extreme thermal stress.</p>
+        </div>
+    </div>
+
 
     <!-- Siemens Modal -->
     <div id="siemens-modal" class="modal-container">
