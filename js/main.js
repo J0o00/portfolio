@@ -14,6 +14,11 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
+
 // ── Core utility systems ────────────────────────────────────────────────────
 import { initBackgroundAnimation }           from './background.js';
 import { initScrollReveal, initStickyHeader, initCounters } from './animations.js';
