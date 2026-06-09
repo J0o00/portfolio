@@ -1809,12 +1809,14 @@ html.theme-transition *::after {
   /* Navbar — keep it compact on mobile */
   .nav-wrapper {
     top: 12px;
-    width: 90%;
+    width: fit-content;
+    max-width: 95vw;
   }
 
   .glass-nav {
-    padding: 10px 16px;
+    padding: 10px 20px;
     gap: 0.5rem;
+    justify-content: space-between;
   }
 
   .nav-links {
@@ -1823,10 +1825,15 @@ html.theme-transition *::after {
 
   .hamburger {
     display: flex;
+    margin-left: 0.5rem;
   }
 
   .nav-actions .theme-segmented-control {
-    display: none; /* hidden in navbar on mobile to save space */
+    display: flex;
+  }
+
+  .nav-actions .theme-segmented-control .segment[data-mode="auto"] {
+    display: none;
   }
 
   /* Hero — stacked, center-aligned */
@@ -2762,15 +2769,7 @@ html.theme-transition *::after {
   .modal-overlay {
     padding: 1rem 0.5rem; /* reduce huge padding on mobile */
   }
-  /* 6. Floating Navbar */
-  .nav-wrapper {
-    width: 100%;
-    top: 0;
-    border-radius: 0;
-  }
-  .glass-nav {
-    border-radius: 0;
-  }
+
   /* 7. Domain Chips horizontal scroll */
   .domains-grid {
     display: flex;
