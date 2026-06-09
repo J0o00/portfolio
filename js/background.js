@@ -189,14 +189,6 @@ export function initBackgroundAnimation() {
             this.vx     = this.baseVx;
             this.vy     = this.baseVy;
             this.radius = Math.random() * 1.5 + 0.8;
-            // Mix domain colors: Power (orange), Embedded (blue), Industrial (green), Digital (purple)
-            const domainColors = [
-                [56, 189, 248],   // Cyan (eBAJA)
-                [99, 102, 241],  // Indigo (Research)
-                [16, 185, 129],  // Green (Siemens)
-                [139, 92, 246],  // Purple (Patent)
-            ];
-            this.color = domainColors[Math.floor(Math.random() * domainColors.length)];
         }
 
         update() {
@@ -219,8 +211,7 @@ export function initBackgroundAnimation() {
         }
 
         draw(proximity) {
-            // Always dark engineering theme — use node domain color
-            const nodeColor = this.color;
+            const nodeColor = NODE_RGB.join(',');
             const baseOpacity = 0.35;
             const opacity = baseOpacity + proximity * 0.45;
             ctx.beginPath();

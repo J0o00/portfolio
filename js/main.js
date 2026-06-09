@@ -35,14 +35,15 @@ import {
     initModalTransitions,
     initStaggeredReveal,
     initPatentFlow,
-    initDomainConnections
 } from './components/interactions.js';
+import { initTimelineCanvases } from './components/timeline-effects.js';
 
 // ── Data visualisation ──────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
     // ── 1. Core rendering ──────────────────────────────────────────────────
     initBackgroundAnimation();   // High-DPI canvas node network
+    initTimelineCanvases();      // Timeline card particle/orb canvases
     initScrollReveal();          // .fade-in IntersectionObserver
     initStickyHeader();          // Navbar blur on scroll
 

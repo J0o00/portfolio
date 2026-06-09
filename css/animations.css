@@ -64,18 +64,8 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   3. TIMELINE SCROLL-SKEW
+   3. TIMELINE SCROLL-SKEW (Disabled)
    ══════════════════════════════════════════════════════════ */
-
-.timeline-item {
-    --skew: 0deg;
-    transform: skewX(var(--skew)) translateY(0);
-    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.timeline-item.skewing {
-    transition: none;
-}
 
 /* ══════════════════════════════════════════════════════════
    4. SCROLL PROGRESS BAR
@@ -115,12 +105,12 @@
 }
 
 .child-visible {
-    opacity: 1 !important;
-    transform: translateY(0) !important;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .timeline-item.child-visible {
-    transform: skewX(var(--skew)) translateY(0) !important;
+    transform: translateY(0);
 }
 
 /* ══════════════════════════════════════════════════════════

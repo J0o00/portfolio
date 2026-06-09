@@ -1395,12 +1395,14 @@ p {
   position: relative;
   margin-bottom: var(--space-xl);
   padding: var(--space-lg);
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  background:
-    linear-gradient(160deg, rgba(255,255,255,0.02) 0%, transparent 50%),
-    var(--bg-card);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  transition: transform 0.4s var(--ease-spring), border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .timeline-item::before {
@@ -1408,12 +1410,18 @@ p {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.08), transparent);
+  background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0.6;
+}
+
+[data-theme="light"] .timeline-item {
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
 }
 
 .timeline-item:hover {
-  border-color: rgba(96, 165, 250, 0.25);
-  box-shadow: var(--shadow-1);
+  transform: translateY(-4px);
+  border-color: rgba(96, 165, 250, 0.35);
+  box-shadow: var(--shadow-2);
 }
 
 .timeline-dot {
@@ -1425,6 +1433,10 @@ p {
   background: var(--domain-embedded);
   border: 2px solid var(--bg-main);
   box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
+
+.timeline-content p {
+  color: var(--text-body);
 }
 
 .timeline-content h3 {
@@ -2172,18 +2184,7 @@ html.theme-transition *::after {
   }
 }
 
-/* Timeline */
-[data-theme="light"] .timeline-item {
-  background: rgba(255,255,255,0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.65);
-  box-shadow: 0 10px 40px rgba(15,23,42,0.08);
-}
-[data-theme="light"] .timeline-item:hover {
-  border-color: rgba(96, 165, 250, 0.3);
-  box-shadow: var(--shadow-2);
-}
+/* Timeline light theme removed to keep consistent dark gradient styling */
 
 /* Philosophy cards */
 [data-theme="light"] .phil-card {
@@ -2438,15 +2439,9 @@ html.theme-transition *::after {
 .credential-item .credential-dot {
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: var(--text-muted);
+  background: var(--primary);
   flex-shrink: 0;
 }
-
-.credential-item.cred-patent .credential-dot { background: var(--domain-digital); }
-.credential-item.cred-siemens .credential-dot { background: var(--domain-industrial); }
-.credential-item.cred-ebaja .credential-dot { background: var(--domain-power); }
-.credential-item.cred-iit .credential-dot { background: var(--domain-embedded); }
-.credential-item.cred-hackathon .credential-dot { background: var(--domain-ai); }
 
 /* ══════════════════════════════════════════════════════════════════
    38. CARD SPEC TABLE — replaces invented KPIs

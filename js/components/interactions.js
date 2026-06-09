@@ -40,6 +40,7 @@ export function initScrollProgress() {
 
 // ─── 2. TIMELINE SCROLL-SKEW ────────────────────────────────────────────────
 export function initTimelineSkew() {
+    return; // Skew effect disabled per user request
     if (motionPrefs.reduced) return;
 
     const items = document.querySelectorAll('.timeline-item');

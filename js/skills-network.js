@@ -76,16 +76,20 @@ export function initSkillsNetwork() {
     function getThemeColors() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         if (isDark) {
+            // Use cyan for everything in dark mode
+            const singleColor = { node: '#38BDF8', text: '#BAE6FD', line: 'rgba(56, 189, 248,0.25)' };
             return {
-                control:      { node: '#38BDF8', text: '#BAE6FD', line: 'rgba(56, 189, 248,0.25)' },
-                hardware:     { node: '#06B6D4', text: '#67E8F9', line: 'rgba(6,182,212,0.25)'  },
-                intelligence: { node: '#D946EF', text: '#F0ABFC', line: 'rgba(217,70,239,0.25)' },
+                control: singleColor,
+                hardware: singleColor,
+                intelligence: singleColor,
             };
         } else {
+            // Use blue for everything in light mode
+            const singleColor = { node: '#3B82F6', text: '#1E3A8A', line: 'rgba(59, 130, 246,0.25)' };
             return {
-                control:      { node: '#6D28D9', text: '#4C1D95', line: 'rgba(109,40,217,0.25)' },
-                hardware:     { node: '#0891B2', text: '#164E63', line: 'rgba(8,145,178,0.25)'  },
-                intelligence: { node: '#C026D3', text: '#701A75', line: 'rgba(192,38,211,0.25)' },
+                control: singleColor,
+                hardware: singleColor,
+                intelligence: singleColor,
             };
         }
     }
