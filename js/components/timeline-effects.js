@@ -26,7 +26,8 @@ export function initTimelineCanvases() {
             particles = [];
             
             // Background large glow orbs (like card 3)
-            for(let i=0; i<3; i++) {
+            const orbCount = width < 768 ? 1 : 3;
+            for(let i=0; i<orbCount; i++) {
                 particles.push({
                     type: 'orb',
                     x: Math.random() * width,
@@ -42,7 +43,8 @@ export function initTimelineCanvases() {
             }
 
             // Small floating particles (like card 1)
-            for(let i=0; i<40; i++) {
+            const particleCount = width < 768 ? 15 : 40;
+            for(let i=0; i<particleCount; i++) {
                 particles.push({
                     type: 'particle',
                     x: Math.random() * width,

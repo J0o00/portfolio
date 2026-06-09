@@ -31,7 +31,7 @@ export function initBackgroundAnimation() {
 
     const nodes   = [];
     const pulses  = [];
-    const MAX_NODES          = 45;
+    let MAX_NODES = window.innerWidth < 768 ? 20 : 45;
     const MAX_PULSES         = 6;
     const CONNECTION_DIST    = 160;
     const PULSE_INTERVAL_MS  = 1800;
