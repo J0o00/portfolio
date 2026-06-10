@@ -304,3 +304,234 @@ drop policy if exists "Owners and Admins can delete user_invites" on public.user
 create policy "Owners and Admins can delete user_invites" on public.user_invites for delete to authenticated using (
   (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
 );
+
+-- 13. Project Status Enum
+DO $$ BEGIN
+    create type project_status as enum ('draft', 'published', 'archived');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- 14. Projects Table
+create table if not exists public.projects (
+    id uuid default gen_random_uuid() primary key,
+    title text not null,
+    slug text unique not null,
+    excerpt text,
+    short_description text,
+    full_description text,
+    status project_status default 'draft' not null,
+    featured boolean default false,
+    featured_order integer default 0,
+    project_url text,
+    github_url text,
+    start_date date,
+    end_date date,
+    seo_title text,
+    seo_description text,
+    cover_media_id uuid references public.media_library(id) on delete set null,
+    created_by uuid references public.users_profile(id) on delete set null,
+    updated_by uuid references public.users_profile(id) on delete set null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Trigger for updating updated_at timestamp on projects
+create or replace function public.update_updated_at_column()
+returns trigger as $$
+begin
+    new.updated_at = timezone('utc'::text, now());
+    return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists update_projects_updated_at on public.projects;
+create trigger update_projects_updated_at
+before update on public.projects
+for each row execute function update_updated_at_column();
+
+-- Editor Publish Protection Trigger
+create or replace function enforce_project_publish_permissions()
+returns trigger as $$
+declare
+    current_role public.user_role;
+begin
+    select role into current_role from public.users_profile where id = auth.uid();
+    
+    if current_role = 'Editor' then
+        if OLD.status <> 'draft' or NEW.status <> 'draft' then
+            raise exception 'Editors cannot publish or archive projects';
+        end if;
+    end if;
+    
+    return NEW;
+end;
+$$ language plpgsql;
+
+drop trigger if exists enforce_project_publish on public.projects;
+create trigger enforce_project_publish
+before update on public.projects
+for each row execute function enforce_project_publish_permissions();
+
+-- Indexes for Projects
+create index if not exists projects_status_idx on public.projects(status);
+create index if not exists projects_featured_idx on public.projects(featured);
+create index if not exists projects_slug_idx on public.projects(slug);
+
+-- 15. Project Tags Table
+create table if not exists public.project_tags (
+    id uuid default gen_random_uuid() primary key,
+    name text unique not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 16. Project Tag Links Table
+create table if not exists public.project_tag_links (
+    project_id uuid references public.projects(id) on delete cascade,
+    tag_id uuid references public.project_tags(id) on delete cascade,
+    primary key (project_id, tag_id)
+);
+create index if not exists project_tag_links_project_idx on public.project_tag_links(project_id);
+create index if not exists project_tag_links_tag_idx on public.project_tag_links(tag_id);
+
+-- 17. Project Media Table
+create table if not exists public.project_media (
+    id uuid default gen_random_uuid() primary key,
+    project_id uuid references public.projects(id) on delete cascade,
+    media_id uuid references public.media_library(id) on delete cascade,
+    is_cover boolean default false,
+    display_order integer default 0,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+create index if not exists project_media_project_idx on public.project_media(project_id);
+create index if not exists project_media_media_idx on public.project_media(media_id);
+
+-- 18. RLS Policies for Projects
+
+alter table public.projects enable row level security;
+alter table public.project_tags enable row level security;
+alter table public.project_tag_links enable row level security;
+alter table public.project_media enable row level security;
+
+-- Projects
+drop policy if exists "Anyone can read published projects" on public.projects;
+create policy "Anyone can read published projects" on public.projects for select using (status = 'published');
+
+drop policy if exists "Authenticated users can read all projects" on public.projects;
+create policy "Authenticated users can read all projects" on public.projects for select to authenticated using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert projects" on public.projects;
+create policy "Owners, Admins, Editors can insert projects" on public.projects for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+    and (
+        (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin') 
+        or 
+        ((select role from public.users_profile where id = auth.uid()) = 'Editor' and status = 'draft')
+    )
+);
+
+drop policy if exists "Owners and Admins can update any project" on public.projects;
+create policy "Owners and Admins can update any project" on public.projects for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+) with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+drop policy if exists "Editors can update draft projects" on public.projects;
+create policy "Editors can update draft projects" on public.projects for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) = 'Editor'
+    and status = 'draft'
+) with check (
+    (select role from public.users_profile where id = auth.uid()) = 'Editor'
+    and status = 'draft'
+);
+
+drop policy if exists "Owners and Admins can delete projects" on public.projects;
+create policy "Owners and Admins can delete projects" on public.projects for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+-- Project Tags
+drop policy if exists "Anyone can read project_tags" on public.project_tags;
+drop policy if exists "Public can read tags used in published projects" on public.project_tags;
+create policy "Public can read tags used in published projects" on public.project_tags for select to anon using (
+    exists (
+        select 1 from public.project_tag_links ptl
+        join public.projects p on p.id = ptl.project_id
+        where ptl.tag_id = project_tags.id and p.status = 'published'
+    )
+);
+
+drop policy if exists "Authenticated users can read all project_tags" on public.project_tags;
+create policy "Authenticated users can read all project_tags" on public.project_tags for select to authenticated using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert tags" on public.project_tags;
+create policy "Owners, Admins, Editors can insert tags" on public.project_tags for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update tags" on public.project_tags;
+create policy "Owners, Admins, Editors can update tags" on public.project_tags for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins can delete tags" on public.project_tags;
+create policy "Owners, Admins can delete tags" on public.project_tags for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+-- Project Tag Links
+drop policy if exists "Anyone can read project_tag_links" on public.project_tag_links;
+drop policy if exists "Public can read published project_tag_links" on public.project_tag_links;
+create policy "Public can read published project_tag_links" on public.project_tag_links for select to anon using (
+    exists (
+        select 1 from public.projects p
+        where p.id = project_tag_links.project_id and p.status = 'published'
+    )
+);
+
+drop policy if exists "Authenticated users can read all project_tag_links" on public.project_tag_links;
+create policy "Authenticated users can read all project_tag_links" on public.project_tag_links for select to authenticated using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert project_tag_links" on public.project_tag_links;
+create policy "Owners, Admins, Editors can insert project_tag_links" on public.project_tag_links for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update project_tag_links" on public.project_tag_links;
+create policy "Owners, Admins, Editors can update project_tag_links" on public.project_tag_links for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can delete project_tag_links" on public.project_tag_links;
+create policy "Owners, Admins, Editors can delete project_tag_links" on public.project_tag_links for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+-- Project Media
+drop policy if exists "Anyone can read project_media" on public.project_media;
+drop policy if exists "Public can read published project_media" on public.project_media;
+create policy "Public can read published project_media" on public.project_media for select to anon using (
+    exists (
+        select 1 from public.projects p
+        where p.id = project_media.project_id and p.status = 'published'
+    )
+);
+
+drop policy if exists "Authenticated users can read all project_media" on public.project_media;
+create policy "Authenticated users can read all project_media" on public.project_media for select to authenticated using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert project_media" on public.project_media;
+create policy "Owners, Admins, Editors can insert project_media" on public.project_media for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update project_media" on public.project_media;
+create policy "Owners, Admins, Editors can update project_media" on public.project_media for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can delete project_media" on public.project_media;
+create policy "Owners, Admins, Editors can delete project_media" on public.project_media for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
