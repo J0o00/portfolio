@@ -39,8 +39,12 @@ import {
 import { initTimelineCanvases } from './components/timeline-effects.js';
 
 // ── Data visualisation ──────────────────────────────────────────────────────
+import { initProfileData } from './profileLoader.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ── 0. Dynamic Content Loading ─────────────────────────────────────────
+    initProfileData();
+
     // ── 1. Core rendering ──────────────────────────────────────────────────
     initBackgroundAnimation();   // High-DPI canvas node network
     initTimelineCanvases();      // Timeline card particle/orb canvases
