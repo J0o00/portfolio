@@ -7,8 +7,9 @@ import Users from './pages/Users';
 
 import ProfileManager from './pages/ProfileManager';
 
+import Dashboard from './pages/Dashboard';
+
 // Placeholder Pages
-const Dashboard = () => <div><h2>Dashboard</h2><p>Welcome to Quantum Control.</p></div>;
 const MediaLibrary = () => <div><h2>Media Library</h2><p>Manage uploaded files across Supabase storage buckets.</p></div>;
 const Settings = () => <div><h2>Settings</h2><p>Backup, Restore, and Audit logs.</p></div>;
 

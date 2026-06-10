@@ -1,23 +1,5 @@
 import React from 'react';
 
-const inputStyle = {
-  width: '100%',
-  padding: '0.75rem',
-  background: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(255,255,255,0.2)',
-  borderRadius: '8px',
-  color: 'white',
-  marginBottom: '1rem',
-  fontSize: '1rem'
-};
-
-const labelStyle = {
-  display: 'block',
-  marginBottom: '0.5rem',
-  color: '#ccc',
-  fontSize: '0.9rem'
-};
-
 export default function ProfileIdentity({ data, update }) {
   const handleChange = (e) => {
     update({ [e.target.name]: e.target.value });
@@ -27,23 +9,23 @@ export default function ProfileIdentity({ data, update }) {
     <div style={{ maxWidth: '600px' }}>
       <h3>Identity</h3>
       
-      <label style={labelStyle}>Full Name</label>
-      <input style={inputStyle} name="name" value={data.name || ''} onChange={handleChange} placeholder="John Doe" />
+      <label className="admin-label">Full Name</label>
+      <input className="admin-input" name="name" value={data.name || ''} onChange={handleChange} placeholder="John Doe" />
       
-      <label style={labelStyle}>Professional Headline</label>
-      <input style={inputStyle} name="headline" value={data.headline || ''} onChange={handleChange} placeholder="Senior Software Engineer" />
+      <label className="admin-label">Professional Headline</label>
+      <input className="admin-input" name="headline" value={data.headline || ''} onChange={handleChange} placeholder="Senior Software Engineer" />
       
-      <label style={labelStyle}>Location</label>
-      <input style={inputStyle} name="location" value={data.location || ''} onChange={handleChange} placeholder="San Francisco, CA" />
+      <label className="admin-label">Location</label>
+      <input className="admin-input" name="location" value={data.location || ''} onChange={handleChange} placeholder="San Francisco, CA" />
       
-      <label style={labelStyle}>Email</label>
-      <input style={inputStyle} name="email" value={data.email || ''} onChange={handleChange} placeholder="john@example.com" />
+      <label className="admin-label">Email</label>
+      <input className="admin-input" name="email" value={data.email || ''} onChange={handleChange} placeholder="john@example.com" />
       
-      <label style={labelStyle}>Phone</label>
-      <input style={inputStyle} name="phone" value={data.phone || ''} onChange={handleChange} placeholder="+1 555-0100" />
+      <label className="admin-label">Phone</label>
+      <input className="admin-input" name="phone" value={data.phone || ''} onChange={handleChange} placeholder="+1 555-0100" />
       
-      <label style={labelStyle}>Personal Website URL</label>
-      <input style={inputStyle} name="website_url" value={data.website_url || ''} onChange={handleChange} placeholder="https://johndoe.com" />
+      <label className="admin-label">Personal Website URL</label>
+      <input className="admin-input" name="website_url" value={data.website_url || ''} onChange={handleChange} placeholder="https://johndoe.com" />
     </div>
   );
 }

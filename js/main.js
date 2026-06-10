@@ -35,6 +35,7 @@ import {
     initModalTransitions,
     initStaggeredReveal,
     initPatentFlow,
+    initDomainConnections,
 } from './components/interactions.js';
 import { initTimelineCanvases } from './components/timeline-effects.js';
 

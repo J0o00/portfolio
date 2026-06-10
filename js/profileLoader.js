@@ -94,6 +94,19 @@ function applyProfileDataToDOM(data) {
     }
   }
 
+  // Email
+  if (data.email) {
+    const contactBtn = document.getElementById('contact-email-btn');
+    if (contactBtn) {
+      contactBtn.href = `mailto:${data.email}`;
+      contactBtn.innerText = data.email;
+    }
+    const footerLink = document.getElementById('footer-email-link');
+    if (footerLink) {
+      footerLink.href = `mailto:${data.email}`;
+    }
+  }
+
   // Media
   if (data.profile_image_url) {
     const img = document.querySelector('.profile-image');

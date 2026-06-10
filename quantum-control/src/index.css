@@ -1,14 +1,15 @@
 :root {
-  --admin-bg: #f5f5f7;
-  --admin-text: #1d1d1f;
-  --admin-card-bg: rgba(255, 255, 255, 0.7);
-  --admin-card-border: rgba(255, 255, 255, 0.5);
+  --admin-bg: #f3f4f6;
+  --admin-text: #111827;
+  --admin-card-bg: rgba(255, 255, 255, 0.9);
+  --admin-card-border: #d1d5db;
   --admin-glass-blur: 20px;
   --admin-accent: #0066cc;
   --admin-accent-hover: #004499;
-  --admin-sidebar-bg: rgba(245, 245, 247, 0.8);
-  --admin-border-color: rgba(0, 0, 0, 0.1);
+  --admin-sidebar-bg: rgba(243, 244, 246, 0.95);
+  --admin-border-color: #d1d5db;
   --admin-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --admin-placeholder: #6b7280;
 }
 
 body {
@@ -46,23 +47,67 @@ body {
   flex-direction: column;
 }
 
+.admin-sidebar a {
+  color: var(--admin-text) !important;
+  text-decoration: none;
+}
+
+
 .admin-main {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Basic Form Styles */
-.admin-input {
+.admin-layout label,
+.admin-main label,
+.admin-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--admin-text) !important;
+  font-weight: 600 !important;
+  opacity: 1 !important;
+}
+
+.admin-input,
+textarea.admin-input,
+select.admin-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--admin-border-color);
+  border: 1px solid var(--admin-border-color) !important;
   border-radius: 8px;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: var(--admin-text) !important;
   font-family: var(--admin-font);
   font-size: 0.95rem;
   box-sizing: border-box;
   margin-bottom: 1rem;
+}
+
+.admin-input::placeholder,
+textarea.admin-input::placeholder {
+  color: var(--admin-placeholder) !important;
+  opacity: 1 !important;
+}
+
+.admin-input:focus,
+textarea.admin-input:focus,
+select.admin-input:focus {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: -1px;
+  border-color: var(--admin-accent) !important;
+}
+
+.admin-input:-webkit-autofill,
+.admin-input:-webkit-autofill:hover, 
+.admin-input:-webkit-autofill:focus, 
+.admin-input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: var(--admin-text) !important;
 }
 
 .admin-button {

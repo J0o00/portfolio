@@ -54,7 +54,7 @@ export default function AdminLayout() {
       </aside>
       
       <main className="admin-main">
-        <div className="glass-panel" style={{ padding: '2rem', minHeight: '100%', boxSizing: 'border-box' }}>
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', padding: '2rem', flex: 1, boxSizing: 'border-box' }}>
           <Outlet />
         </div>
       </main>
