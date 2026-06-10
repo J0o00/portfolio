@@ -145,19 +145,31 @@ before update or delete on public.users_profile
 for each row execute function protect_last_owner();
 
 -- 8. Auto-create user profile on signup via Auth Trigger
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_user cascade;
+
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+    invite_record record;
 begin
-  if new.email = 'jovialjoyson@gmail.com' then
-    insert into public.users_profile (id, email, role, status)
-    values (new.id, new.email, 'Owner', 'Active');
-  else
-    -- Everyone else starts as a Viewer, or you can omit this else block entirely
-    -- if you strictly want to prevent any profiles from being created unless added by an admin.
-    -- Since the requirement is an explicit whitelist, it's safer NOT to insert non-owners automatically.
-    -- But for now we will just not insert anything for other users, so they get access denied.
-  end if;
-  return new;
+    if lower(trim(new.email)) = 'jovialjoyson@gmail.com' then
+        insert into public.users_profile (id, email, role, status)
+        values (new.id, new.email, 'Owner', 'Active')
+        on conflict (id) do nothing;
+    else
+        -- Check if user is in user_invites (case-insensitive)
+        select * into invite_record from public.user_invites where lower(email) = lower(trim(new.email));
+        if found then
+            insert into public.users_profile (id, email, role, status)
+            values (new.id, new.email, invite_record.role, invite_record.status)
+            on conflict (id) do nothing;
+            
+            -- Mark the invite as used to preserve the audit trail
+            update public.user_invites set used_at = timezone('utc'::text, now()) where lower(email) = lower(trim(new.email));
+        end if;
+    end if;
+    return new;
 end;
 $$ language plpgsql security definer;
 
@@ -226,3 +238,69 @@ create policy "Owners and Admins can update media_library" on public.media_libra
   (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
 );
 
+-- 11. Role Hierarchy Enforcement Trigger
+drop function if exists enforce_role_hierarchy cascade;
+create or replace function enforce_role_hierarchy()
+returns trigger as $$
+declare
+    current_user_role public.user_role;
+begin
+    -- Get the role of the user performing the update
+    select role into current_user_role from public.users_profile where id = auth.uid();
+
+    -- If the updater is an Admin, enforce restrictions
+    if current_user_role = 'Admin' then
+        -- 1. Admin cannot modify Owners or Admins
+        if OLD.role in ('Owner', 'Admin') then
+            raise exception 'Admins cannot modify Owners or Admins.';
+        end if;
+        -- 2. Admin cannot assign Owner or Admin
+        if NEW.role in ('Owner', 'Admin') then
+            raise exception 'Admins cannot assign Owner or Admin.';
+        end if;
+    end if;
+    
+    return coalesce(NEW, OLD);
+end;
+$$ language plpgsql;
+
+create trigger enforce_role_hierarchy_trigger
+before update on public.users_profile
+for each row execute function enforce_role_hierarchy();
+
+-- 3. User Invites (Whitelist) Table
+create table if not exists public.user_invites (
+    id uuid default gen_random_uuid() primary key,
+    email text unique not null,
+    role user_role not null default 'Viewer',
+    status user_status not null default 'Active',
+    invited_by uuid references public.users_profile(id) on delete set null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    used_at timestamp with time zone
+);
+
+create unique index if not exists user_invites_email_lower_idx on public.user_invites (lower(email));
+
+alter table public.user_invites enable row level security;
+
+drop policy if exists "Owners and Admins can read user_invites" on public.user_invites;
+create policy "Owners and Admins can read user_invites" on public.user_invites for select to authenticated using (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+drop policy if exists "Owners and Admins can insert user_invites" on public.user_invites;
+create policy "Owners and Admins can insert user_invites" on public.user_invites for insert to authenticated with check (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+drop policy if exists "Owners and Admins can update user_invites" on public.user_invites;
+create policy "Owners and Admins can update user_invites" on public.user_invites for update to authenticated using (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+) with check (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+drop policy if exists "Owners and Admins can delete user_invites" on public.user_invites;
+create policy "Owners and Admins can delete user_invites" on public.user_invites for delete to authenticated using (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);

@@ -29,6 +29,9 @@ export const AuthProvider = ({ children }) => {
       console.log(`[Auth] Auth state changed: ${event}`);
       if (event === 'SIGNED_IN') {
          console.log('[Auth] OAuth redirect return or sign in successful.');
+         if (session?.user) {
+           supabase.from('users_profile').update({ last_login: new Date().toISOString() }).eq('id', session.user.id).then();
+         }
       }
       setSession(session);
       setUser(session?.user ?? null);
