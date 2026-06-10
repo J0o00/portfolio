@@ -192,3 +192,37 @@ create policy "Approved users can insert revisions" on public.content_revisions 
     and up.role in ('Owner', 'Admin', 'Editor')
   )
 );
+
+-- 10. Media Library
+create table public.media_library (
+    id uuid default gen_random_uuid() primary key,
+    filename text not null,
+    bucket text not null,
+    storage_path text not null unique,
+    asset_type text not null,
+    mime_type text,
+    file_size bigint,
+    alt_text text,
+    tags text[],
+    status text default 'active',
+    usage_count integer default 0,
+    is_featured boolean default false,
+    uploaded_by uuid references public.users_profile(id) on delete set null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.media_library enable row level security;
+
+-- Policies for media_library
+create policy "Owners, Admins, Editors can read media_library" on public.media_library for select to authenticated using (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+create policy "Owners, Admins, Editors can insert media_library" on public.media_library for insert to authenticated with check (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+create policy "Owners and Admins can update media_library" on public.media_library for update to authenticated using (
+  (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+

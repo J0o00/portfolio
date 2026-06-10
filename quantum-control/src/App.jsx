@@ -4,13 +4,11 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import AdminLayout from './layouts/AdminLayout';
 import Login from './pages/Login';
 import Users from './pages/Users';
-
 import ProfileManager from './pages/ProfileManager';
-
 import Dashboard from './pages/Dashboard';
+import MediaLibrary from './pages/MediaLibrary/MediaLibrary';
 
 // Placeholder Pages
-const MediaLibrary = () => <div><h2>Media Library</h2><p>Manage uploaded files across Supabase storage buckets.</p></div>;
 const Settings = () => <div><h2>Settings</h2><p>Backup, Restore, and Audit logs.</p></div>;
 
 const ProtectedRoute = ({ children }) => {
