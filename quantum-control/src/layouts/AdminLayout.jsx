@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, Image as ImageIcon, Settings, UserCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Image as ImageIcon, Settings, UserCircle, LogOut, FolderKanban } from 'lucide-react';
 
 export default function AdminLayout() {
   const { userProfile, signOut } = useAuth();
@@ -37,6 +37,7 @@ export default function AdminLayout() {
         <nav style={{ flex: 1 }}>
           <NavLink to="/" style={navItemStyle} end><LayoutDashboard size={18} /> Dashboard</NavLink>
           <NavLink to="/profile" style={navItemStyle}><UserCircle size={18} /> Profile Manager</NavLink>
+          <NavLink to="/projects" style={navItemStyle}><FolderKanban size={18} /> Projects</NavLink>
           <NavLink to="/media" style={navItemStyle}><ImageIcon size={18} /> Media Library</NavLink>
           
           {(userProfile?.role === 'Owner' || userProfile?.role === 'Admin') && (
