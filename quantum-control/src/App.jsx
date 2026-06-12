@@ -10,6 +10,9 @@ import MediaLibrary from './pages/MediaLibrary/MediaLibrary';
 import Projects from './pages/Projects/Projects';
 import ProjectEditor from './pages/Projects/Editor/ProjectEditor';
 
+import Research from './pages/Research/Research';
+import ResearchEditor from './pages/Research/Editor/ResearchEditor';
+
 // Placeholder Pages
 const Settings = () => <div><h2>Settings</h2><p>Backup, Restore, and Audit logs.</p></div>;
 
@@ -39,6 +42,8 @@ export default function App() {
             <Route path="users" element={<Users />} />
             <Route path="projects" element={<Projects />} />
             <Route path="projects/:id" element={<ProjectEditor />} />
+            <Route path="research" element={<Research />} />
+            <Route path="research/:id" element={<ResearchEditor />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

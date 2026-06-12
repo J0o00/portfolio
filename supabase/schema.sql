@@ -535,3 +535,136 @@ drop policy if exists "Owners, Admins, Editors can delete project_media" on publ
 create policy "Owners, Admins, Editors can delete project_media" on public.project_media for delete to authenticated using (
     (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
 );
+
+-- 12. Research Tables
+create table if not exists public.research (
+    id uuid default gen_random_uuid() primary key,
+    title text not null,
+    slug text not null unique,
+    type text not null, -- 'Investigation', 'Patent', 'Publication', 'Conference'
+    reference_number text, -- 'DOI: 10...', 'Patent App: 2026...'
+    venue text, -- 'IEEE PESCCIMCON 2026', 'Patent Office'
+    authors text[], -- '["Jovial Joyson"]'
+    status text not null default 'draft' check (status in ('draft', 'published', 'archived')),
+    research_status text, -- 'Concept Phase', 'MATLAB Modeling', etc.
+    next_steps text,
+    abstract text, -- Short summary for preview / modal
+    content text, -- Full body content
+    url text,
+    cover_media_id uuid references public.media_library(id) on delete set null,
+    published_date date,
+    featured boolean default false,
+    featured_order integer default 0,
+    is_ongoing boolean default false,
+    created_by uuid references public.users_profile(id) on delete set null,
+    updated_by uuid references public.users_profile(id) on delete set null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table if not exists public.research_tags (
+    id uuid default gen_random_uuid() primary key,
+    name text not null,
+    slug text not null unique,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table if not exists public.research_tag_links (
+    research_id uuid references public.research(id) on delete cascade,
+    tag_id uuid references public.research_tags(id) on delete cascade,
+    primary key (research_id, tag_id)
+);
+
+-- Triggers for updated_at
+drop trigger if exists update_research_updated_at on public.research;
+create trigger update_research_updated_at
+before update on public.research
+for each row execute function public.update_updated_at_column();
+
+-- Indexes for performance
+create index if not exists idx_research_status on public.research(status);
+create index if not exists idx_research_featured on public.research(featured);
+create index if not exists idx_research_published_date on public.research(published_date);
+create index if not exists idx_research_tag_links_research on public.research_tag_links(research_id);
+create index if not exists idx_research_tag_links_tag on public.research_tag_links(tag_id);
+create index if not exists idx_research_tags_slug on public.research_tags(slug);
+
+-- Enable RLS for research tables
+alter table public.research enable row level security;
+alter table public.research_tags enable row level security;
+alter table public.research_tag_links enable row level security;
+
+-- Policies for research
+drop policy if exists "Public can read published research" on public.research;
+create policy "Public can read published research" on public.research for select to anon using (status = 'published');
+
+drop policy if exists "Authenticated users can read all research" on public.research;
+create policy "Authenticated users can read all research" on public.research for select to authenticated using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert research" on public.research;
+create policy "Owners, Admins, Editors can insert research" on public.research for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners and Admins can update research" on public.research;
+create policy "Owners and Admins can update research" on public.research for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+) with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+drop policy if exists "Editors can update draft research" on public.research;
+create policy "Editors can update draft research" on public.research for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) = 'Editor'
+    and status = 'draft'
+) with check (
+    (select role from public.users_profile where id = auth.uid()) = 'Editor'
+    and status = 'draft'
+);
+
+drop policy if exists "Owners and Admins can delete research" on public.research;
+create policy "Owners and Admins can delete research" on public.research for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin')
+);
+
+-- Policies for research_tags
+drop policy if exists "Anyone can read research_tags" on public.research_tags;
+create policy "Anyone can read research_tags" on public.research_tags for select using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert research_tags" on public.research_tags;
+create policy "Owners, Admins, Editors can insert research_tags" on public.research_tags for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update research_tags" on public.research_tags;
+create policy "Owners, Admins, Editors can update research_tags" on public.research_tags for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+) with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can delete research_tags" on public.research_tags;
+create policy "Owners, Admins, Editors can delete research_tags" on public.research_tags for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+-- Policies for research_tag_links
+drop policy if exists "Anyone can read research_tag_links" on public.research_tag_links;
+create policy "Anyone can read research_tag_links" on public.research_tag_links for select using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert research_tag_links" on public.research_tag_links;
+create policy "Owners, Admins, Editors can insert research_tag_links" on public.research_tag_links for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update research_tag_links" on public.research_tag_links;
+create policy "Owners, Admins, Editors can update research_tag_links" on public.research_tag_links for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+) with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can delete research_tag_links" on public.research_tag_links;
+create policy "Owners, Admins, Editors can delete research_tag_links" on public.research_tag_links for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
