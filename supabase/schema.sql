@@ -181,7 +181,7 @@ create trigger on_auth_user_created
 create table public.content_revisions (
     id uuid default uuid_generate_v4() primary key,
     content_type text not null,
-    content_id uuid not null, -- Can be uuid or text depending on the target table's PK, using uuid for modules usually
+    content_id text not null, -- Can be uuid or text depending on the target table's PK, using text to support both integer (site_profile) and uuid (projects)
     version integer not null,
     snapshot_json jsonb not null,
     revision_label text,

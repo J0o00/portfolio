@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../../src/lib/supabase';
-import { Search, X, Check } from 'lucide-react';
+import { Search, X, Check, Upload } from 'lucide-react';
+import MediaUpload from './MediaUpload';
 
 export default function MediaPickerModal({ isOpen, onClose, onSelect, multiple = false, initialSelectedIds = [] }) {
   const [assets, setAssets] = useState([]);
@@ -8,6 +9,7 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, multiple =
   const [searchTerm, setSearchTerm] = useState('');
   const [assetTypeFilter, setAssetTypeFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState([]);
+  const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -83,37 +85,64 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, multiple =
       }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <h2 style={{ margin: 0 }}>Select Media</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-            <X size={24} />
-          </button>
+          <h2 style={{ margin: 0 }}>{showUpload ? 'Upload Media' : 'Select Media'}</h2>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <button 
+              onClick={() => setShowUpload(!showUpload)} 
+              className="admin-button-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              {showUpload ? 'Back to Library' : <><Upload size={16} /> Upload New</>}
+            </button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.25rem' }}>
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--admin-placeholder)' }} />
-            <input 
-              type="text" 
-              placeholder="Search filename or tags..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="admin-input"
-              style={{ margin: 0, paddingLeft: '2.5rem' }}
+        {showUpload ? (
+          <div style={{ padding: '2rem', flex: 1, overflowY: 'auto' }}>
+            <MediaUpload 
+              onUploadSuccess={(newAsset) => {
+                fetchAssets();
+                if (newAsset) {
+                  if (!multiple) {
+                    setSelectedIds([newAsset.id]);
+                  } else {
+                    setSelectedIds(prev => [...prev, newAsset.id]);
+                  }
+                }
+                setShowUpload(false);
+              }} 
             />
           </div>
-          <select 
-            className="admin-input" 
-            style={{ width: '200px', margin: 0 }}
-            value={assetTypeFilter}
-            onChange={(e) => setAssetTypeFilter(e.target.value)}
-          >
-            <option value="all">All Types</option>
-            {uniqueAssetTypes.map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
+        ) : (
+          <>
+            {/* Filters */}
+            <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ flex: 1, position: 'relative' }}>
+                <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--admin-placeholder)' }} />
+                <input 
+                  type="text" 
+                  placeholder="Search filename or tags..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="admin-input"
+                  style={{ margin: 0, paddingLeft: '2.5rem' }}
+                />
+              </div>
+              <select 
+                className="admin-input" 
+                style={{ width: '200px', margin: 0 }}
+                value={assetTypeFilter}
+                onChange={(e) => setAssetTypeFilter(e.target.value)}
+              >
+                <option value="all">All Types</option>
+                {uniqueAssetTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
 
         {/* Grid Area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
@@ -175,6 +204,8 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, multiple =
             </div>
           )}
         </div>
+        </>
+        )}
 
         {/* Footer */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>

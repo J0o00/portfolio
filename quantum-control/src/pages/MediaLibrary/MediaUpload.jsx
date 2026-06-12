@@ -43,7 +43,7 @@ export default function MediaUpload({ onUploadSuccess }) {
       else if (file.type === 'application/pdf') assetType = 'pdf';
 
       // Insert Metadata into media_library
-      const { error: dbError } = await supabase
+      const { data: newAsset, error: dbError } = await supabase
         .from('media_library')
         .insert({
           filename: file.name,
@@ -52,13 +52,16 @@ export default function MediaUpload({ onUploadSuccess }) {
           asset_type: assetType,
           mime_type: file.type,
           file_size: file.size,
+          status: 'active',
           uploaded_by: userProfile.id
-        });
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
 
       setFile(null);
-      if (onUploadSuccess) onUploadSuccess();
+      if (onUploadSuccess) onUploadSuccess(newAsset);
     } catch (err) {
       console.error('Upload failed:', err);
       setError(err.message || 'Upload failed');
