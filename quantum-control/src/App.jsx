@@ -8,6 +8,7 @@ import ProfileManager from './pages/ProfileManager';
 import Dashboard from './pages/Dashboard';
 import MediaLibrary from './pages/MediaLibrary/MediaLibrary';
 import Projects from './pages/Projects/Projects';
+import ProjectEditor from './pages/Projects/Editor/ProjectEditor';
 
 // Placeholder Pages
 const Settings = () => <div><h2>Settings</h2><p>Backup, Restore, and Audit logs.</p></div>;
@@ -37,7 +38,7 @@ export default function App() {
             <Route path="media" element={<MediaLibrary />} />
             <Route path="users" element={<Users />} />
             <Route path="projects" element={<Projects />} />
-            <Route path="projects/:id" element={<div>Project Editor Placeholder</div>} />
+            <Route path="projects/:id" element={<ProjectEditor />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

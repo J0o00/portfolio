@@ -399,7 +399,6 @@ create table if not exists public.project_media (
     id uuid default gen_random_uuid() primary key,
     project_id uuid references public.projects(id) on delete cascade,
     media_id uuid references public.media_library(id) on delete cascade,
-    is_cover boolean default false,
     display_order integer default 0,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
