@@ -201,5 +201,100 @@ export const projectService = {
         .insert(insertPayload);
       if (insertError) throw insertError;
     }
+  },
+
+  async createProjectRevision(projectId, userId, label = 'Manual Snapshot') {
+    // 1. Fetch all current data
+    const projectData = await this.getProject(projectId);
+    const mediaData = await this.getProjectGallery(projectId);
+    const tagsData = await this.getProjectTags(projectId);
+
+    const snapshot = {
+      project: projectData,
+      media: mediaData.map(m => m.media_id),
+      tags: tagsData.map(t => t.id)
+    };
+
+    // 2. Get next version number
+    const { data: latestRevisions, error: revError } = await supabase
+      .from('content_revisions')
+      .select('version')
+      .eq('content_id', projectId)
+      .eq('content_type', 'project')
+      .order('version', { ascending: false })
+      .limit(1);
+
+    if (revError) throw revError;
+    const nextVersion = latestRevisions.length > 0 ? latestRevisions[0].version + 1 : 1;
+
+    // 3. Insert revision
+    const { data, error } = await supabase
+      .from('content_revisions')
+      .insert({
+        content_type: 'project',
+        content_id: projectId,
+        version: nextVersion,
+        snapshot_json: snapshot,
+        revision_label: label,
+        created_by: userId
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getProjectRevisions(projectId) {
+    const { data, error } = await supabase
+      .from('content_revisions')
+      .select('id, version, revision_label, created_at, created_by, users_profile(email)')
+      .eq('content_id', projectId)
+      .eq('content_type', 'project')
+      .order('version', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async restoreProjectRevision(projectId, revisionId, userId) {
+    // 1. Auto-snapshot current state before destructive action
+    await this.createProjectRevision(projectId, userId, 'Auto-Snapshot before Restore');
+
+    // 2. Fetch the revision
+    const { data: revision, error: fetchError } = await supabase
+      .from('content_revisions')
+      .select('snapshot_json, version')
+      .eq('id', revisionId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const snapshot = revision.snapshot_json;
+
+    // 3. Update project data
+    const projectPayload = {
+      title: snapshot.project.title,
+      slug: snapshot.project.slug,
+      excerpt: snapshot.project.excerpt,
+      short_description: snapshot.project.short_description,
+      full_description: snapshot.project.full_description,
+      status: snapshot.project.status,
+      featured: snapshot.project.featured,
+      featured_order: snapshot.project.featured_order,
+      cover_media_id: snapshot.project.cover_media_id,
+      updated_by: userId
+    };
+
+    await this.updateProject(projectId, projectPayload);
+
+    // 4. Update media (using our existing sync function)
+    await this.saveProjectMedia(projectId, {
+      coverMediaId: snapshot.project.cover_media_id,
+      galleryMediaIds: snapshot.media || []
+    });
+
+    // 5. Update tags (using our existing sync function)
+    await this.saveProjectTags(projectId, snapshot.tags || []);
   }
 };

@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectService } from '../../../services/projectService';
 import { useAuth } from '../../../context/AuthContext';
-import { Save, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, AlertCircle, Globe } from 'lucide-react';
 
 import ProjectIdentity from './ProjectIdentity';
 import ProjectContent from './ProjectContent';
 import ProjectSettings from './ProjectSettings';
 import ProjectMedia from './ProjectMedia';
 import ProjectTags from './ProjectTags';
+import ProjectRevisions from './ProjectRevisions';
 
 export default function ProjectEditor() {
   const { id } = useParams();
@@ -88,6 +89,43 @@ export default function ProjectEditor() {
     }
   };
 
+  const handlePublish = async () => {
+    try {
+      setSaving(true);
+      
+      const payload = {
+        title: projectData.title,
+        slug: projectData.slug,
+        excerpt: projectData.excerpt,
+        short_description: projectData.short_description,
+        full_description: projectData.full_description,
+        featured: projectData.featured,
+        featured_order: projectData.featured_order,
+        status: 'published',
+        updated_by: userProfile.id
+      };
+      
+      await projectService.updateProject(id, payload);
+      await projectService.saveProjectMedia(id, {
+        coverMediaId: projectData.cover_media_id,
+        galleryMediaIds: projectData.gallery ? projectData.gallery.map(g => g.id) : []
+      });
+      await projectService.saveProjectTags(id, projectData.tags ? projectData.tags.map(t => t.id) : []);
+
+      // Auto snapshot upon publish
+      await projectService.createProjectRevision(id, userProfile.id, 'Auto-Snapshot: Published');
+
+      setProjectData(prev => ({ ...prev, status: 'published' }));
+      setHasChanges(false);
+      alert('Project published successfully and a snapshot was created!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to publish project.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return <div style={{ padding: '2rem' }}>Loading Project...</div>;
   if (!projectData) return <div style={{ padding: '2rem' }}>Project not found or you don't have access.</div>;
 
@@ -122,6 +160,14 @@ export default function ProjectEditor() {
             {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
             Save Changes
           </button>
+          <button 
+            onClick={handlePublish}
+            disabled={saving || !canEdit || projectData.status === 'published'}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: projectData.status === 'published' ? 'rgba(39, 174, 96, 0.5)' : '#27ae60', color: 'white', border: 'none', borderRadius: '6px', cursor: (saving || !canEdit || projectData.status === 'published') ? 'not-allowed' : 'pointer' }}
+          >
+            {saving ? <Loader2 size={16} className="spin" /> : <Globe size={16} />}
+            {projectData.status === 'published' ? 'Published' : 'Publish'}
+          </button>
         </div>
       </div>
 
@@ -132,7 +178,7 @@ export default function ProjectEditor() {
           background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column',
           padding: '1rem', gap: '0.5rem'
         }}>
-          {['identity', 'content', 'media', 'tags', 'settings'].map(tab => (
+          {['identity', 'content', 'media', 'tags', 'settings', 'history'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -162,6 +208,7 @@ export default function ProjectEditor() {
             {activeTab === 'media' && <ProjectMedia data={projectData} update={handleUpdate} />}
             {activeTab === 'tags' && <ProjectTags data={projectData} update={handleUpdate} />}
             {activeTab === 'settings' && <ProjectSettings data={projectData} update={handleUpdate} />}
+            {activeTab === 'history' && <ProjectRevisions data={projectData} refreshProject={loadProject} />}
           </div>
         </div>
       </div>

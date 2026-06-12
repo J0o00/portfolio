@@ -184,6 +184,7 @@ create table public.content_revisions (
     content_id uuid not null, -- Can be uuid or text depending on the target table's PK, using uuid for modules usually
     version integer not null,
     snapshot_json jsonb not null,
+    revision_label text,
     created_by uuid references public.users_profile(id) on delete set null,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
