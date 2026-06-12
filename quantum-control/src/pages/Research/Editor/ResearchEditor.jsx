@@ -7,6 +7,7 @@ import { Save, ArrowLeft, Loader2, AlertCircle, Globe } from 'lucide-react';
 import ResearchIdentity from './ResearchIdentity';
 import ResearchContent from './ResearchContent';
 import ResearchSettings from './ResearchSettings';
+import ResearchMedia from './ResearchMedia';
 
 export default function ResearchEditor() {
   const { id } = useParams();
@@ -71,6 +72,7 @@ export default function ResearchEditor() {
         featured: researchData.featured,
         featured_order: researchData.featured_order,
         is_ongoing: researchData.is_ongoing,
+        cover_media_id: researchData.cover_media_id,
         updated_by: userProfile.id
       };
       
@@ -110,6 +112,7 @@ export default function ResearchEditor() {
         featured: researchData.featured,
         featured_order: researchData.featured_order,
         is_ongoing: researchData.is_ongoing,
+        cover_media_id: researchData.cover_media_id,
         status: 'published',
         updated_by: userProfile.id
       };
@@ -183,7 +186,7 @@ export default function ResearchEditor() {
           background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column',
           padding: '1rem', gap: '0.5rem'
         }}>
-          {['identity', 'content', 'settings'].map(tab => (
+          {['identity', 'content', 'media', 'settings'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -210,6 +213,7 @@ export default function ResearchEditor() {
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             {activeTab === 'identity' && <ResearchIdentity data={researchData} update={handleUpdate} />}
             {activeTab === 'content' && <ResearchContent data={researchData} update={handleUpdate} />}
+            {activeTab === 'media' && <ResearchMedia data={researchData} update={handleUpdate} />}
             {activeTab === 'settings' && <ResearchSettings data={researchData} update={handleUpdate} />}
           </div>
         </div>
