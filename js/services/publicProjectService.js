@@ -18,10 +18,17 @@ export const publicProjectService = {
     }
     
     // Clean up the data structure
-    return data.map(project => ({
-      ...project,
-      tags: project.project_tag_links ? project.project_tag_links.map(link => link.project_tags).filter(Boolean) : []
-    }));
+    return data.map(project => {
+      let cover_media = project.cover_media;
+      if (cover_media && cover_media.bucket && cover_media.storage_path) {
+        cover_media.url = supabase.storage.from(cover_media.bucket).getPublicUrl(cover_media.storage_path).data.publicUrl;
+      }
+      return {
+        ...project,
+        tags: project.project_tag_links ? project.project_tag_links.map(link => link.project_tags).filter(Boolean) : [],
+        cover_media
+      };
+    });
   },
 
   async getProjectBySlug(slug) {
@@ -44,12 +51,24 @@ export const publicProjectService = {
 
     // Clean up the data structure
     const gallery = data.project_media
-      ? data.project_media.sort((a, b) => a.display_order - b.display_order).map(pm => pm.media_library).filter(Boolean)
+      ? data.project_media.sort((a, b) => a.display_order - b.display_order).map(pm => {
+          const m = pm.media_library;
+          if (m && m.bucket && m.storage_path) {
+            m.url = supabase.storage.from(m.bucket).getPublicUrl(m.storage_path).data.publicUrl;
+          }
+          return m;
+        }).filter(Boolean)
       : [];
+
+    let cover_media = data.cover_media;
+    if (cover_media && cover_media.bucket && cover_media.storage_path) {
+      cover_media.url = supabase.storage.from(cover_media.bucket).getPublicUrl(cover_media.storage_path).data.publicUrl;
+    }
 
     return {
       ...data,
       tags: data.project_tag_links ? data.project_tag_links.map(link => link.project_tags).filter(Boolean) : [],
+      cover_media,
       gallery
     };
   }

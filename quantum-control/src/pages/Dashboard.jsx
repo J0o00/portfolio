@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExternalLink, RefreshCw, Monitor, Smartphone, LayoutDashboard, Eye } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { restoreOldData } from '../utils/restoreData';
 
 export default function Dashboard() {
   const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' or 'preview'
   const [device, setDevice] = useState('desktop'); // 'desktop' or 'mobile'
   const [key, setKey] = useState(0);
+
+  useEffect(() => {
+    restoreOldData();
+  }, []);
 
   const refreshPreview = () => setKey(k => k + 1);
 

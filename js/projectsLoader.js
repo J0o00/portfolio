@@ -4,20 +4,27 @@ let allProjects = [];
 let activeTag = 'All';
 
 export async function initProjects() {
-  const container = document.querySelector('.projects-grid');
+  const container = document.getElementById('projects-grid');
   if (!container) return;
 
   try {
     allProjects = await publicProjectService.getPublishedProjects();
     renderFilters();
     renderProjects(allProjects);
+
+    // Auto-open if deep linked
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectSlug = urlParams.get('project');
+    if (projectSlug) {
+      setTimeout(() => openDynamicProjectModal(projectSlug), 500);
+    }
   } catch (err) {
     console.error('[ProjectsLoader] Failed to init projects:', err);
   }
 }
 
 function renderFilters() {
-  const container = document.querySelector('.projects-grid');
+  const container = document.getElementById('projects-grid');
   if (!container) return;
 
   // Extract unique tags
@@ -110,7 +117,7 @@ function filterProjects() {
 }
 
 function renderProjects(projects) {
-  const container = document.querySelector('.projects-grid');
+  const container = document.getElementById('projects-grid');
   if (!container) return;
 
   container.innerHTML = ''; // Clear existing
@@ -179,6 +186,14 @@ async function openDynamicProjectModal(slug) {
     if (overlay) overlay.classList.add('active');
     modalContainer.classList.add('active');
   }
+
+  // Update URL for deep linking
+  const newUrl = new URL(window.location);
+  newUrl.searchParams.set('project', slug);
+  window.history.pushState({ modal: 'project', slug }, '', newUrl);
+
+  // Import dynamically to avoid circular dependency at top level
+  import('./seoManager.js').then(module => module.updateCanonicalUrl(newUrl.href));
 
   try {
     const projectDetails = await publicProjectService.getProjectBySlug(slug);

@@ -132,6 +132,15 @@ export function initModalTransitions() {
             overlay.style.transition = '';
             overlay.style.display    = '';
             document.body.style.overflow = '';
+
+            // Clean up deep link URL
+            const url = new URL(window.location);
+            if (url.searchParams.has('project') || url.searchParams.has('research')) {
+                url.searchParams.delete('project');
+                url.searchParams.delete('research');
+                window.history.pushState({}, '', url);
+                import('../seoManager.js').then(m => m.updateCanonicalUrl(url.href)).catch(e => console.error(e));
+            }
         }, 230);
     };
 

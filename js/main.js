@@ -42,11 +42,19 @@ import { initTimelineCanvases } from './components/timeline-effects.js';
 // ── Data visualisation ──────────────────────────────────────────────────────
 import { initProfileData } from './profileLoader.js';
 import { initProjects } from './projectsLoader.js';
+import { initResearch } from './researchLoader.js';
+import { initExperience } from './experienceLoader.js';
+import { initSEO } from './seoManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // ── 0. Dynamic Content Loading ─────────────────────────────────────────
     initProfileData();
+    console.log("INIT PROJECTS");
     initProjects();
+    console.log("INIT RESEARCH");
+    initResearch();
+    initExperience();
+    initSEO();
 
     // ── 1. Core rendering ──────────────────────────────────────────────────
     initBackgroundAnimation();   // High-DPI canvas node network
