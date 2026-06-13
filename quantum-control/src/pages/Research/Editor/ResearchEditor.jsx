@@ -8,6 +8,8 @@ import ResearchIdentity from './ResearchIdentity';
 import ResearchContent from './ResearchContent';
 import ResearchSettings from './ResearchSettings';
 import ResearchMedia from './ResearchMedia';
+import ResearchTags from './ResearchTags';
+import ResearchRevisions from './ResearchRevisions';
 
 export default function ResearchEditor() {
   const { id } = useParams();
@@ -31,7 +33,8 @@ export default function ResearchEditor() {
     try {
       setLoading(true);
       const data = await researchService.getResearchById(id);
-      // Media, Tags, and History will be populated here in future phases
+      const tagsData = await researchService.getResearchTags(id);
+      data.tags = tagsData;
       setResearchData(data);
     } catch (err) {
       console.error(err);
@@ -78,7 +81,7 @@ export default function ResearchEditor() {
       
       await researchService.updateResearch(id, payload);
 
-      // Future: save media and tags here
+      await researchService.saveResearchTags(id, researchData.tags ? researchData.tags.map(t => t.id) : []);
 
       setHasChanges(false);
       alert('Changes saved successfully!');
@@ -118,10 +121,10 @@ export default function ResearchEditor() {
       };
       
       await researchService.updateResearch(id, payload);
-      // Future: save media and tags here
+      await researchService.saveResearchTags(id, researchData.tags ? researchData.tags.map(t => t.id) : []);
 
       // Auto snapshot upon publish
-      // await researchService.createResearchRevision(id, userProfile.id, 'Auto-Snapshot: Published');
+      await researchService.createResearchRevision(id, userProfile.id, 'Auto-Snapshot: Published');
 
       setResearchData(prev => ({ ...prev, status: 'published' }));
       setHasChanges(false);
@@ -170,11 +173,11 @@ export default function ResearchEditor() {
           </button>
           <button 
             onClick={handlePublish}
-            disabled={saving || !canEdit || researchData.status === 'published'}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: researchData.status === 'published' ? 'rgba(39, 174, 96, 0.5)' : '#27ae60', color: 'white', border: 'none', borderRadius: '6px', cursor: (saving || !canEdit || researchData.status === 'published') ? 'not-allowed' : 'pointer' }}
+            disabled={saving || !canEdit}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#27ae60', color: 'white', border: 'none', borderRadius: '6px', cursor: (saving || !canEdit) ? 'not-allowed' : 'pointer' }}
           >
             {saving ? <Loader2 size={16} className="spin" /> : <Globe size={16} />}
-            {researchData.status === 'published' ? 'Published' : 'Publish'}
+            {researchData.status === 'published' ? 'Republish' : 'Publish'}
           </button>
         </div>
       </div>
@@ -186,7 +189,7 @@ export default function ResearchEditor() {
           background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column',
           padding: '1rem', gap: '0.5rem'
         }}>
-          {['identity', 'content', 'media', 'settings'].map(tab => (
+          {['identity', 'content', 'media', 'tags', 'settings', 'history'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -214,7 +217,9 @@ export default function ResearchEditor() {
             {activeTab === 'identity' && <ResearchIdentity data={researchData} update={handleUpdate} />}
             {activeTab === 'content' && <ResearchContent data={researchData} update={handleUpdate} />}
             {activeTab === 'media' && <ResearchMedia data={researchData} update={handleUpdate} />}
+            {activeTab === 'tags' && <ResearchTags data={researchData} update={handleUpdate} />}
             {activeTab === 'settings' && <ResearchSettings data={researchData} update={handleUpdate} />}
+            {activeTab === 'history' && <ResearchRevisions data={researchData} refreshResearch={loadResearch} />}
           </div>
         </div>
       </div>

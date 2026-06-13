@@ -162,11 +162,11 @@ export default function ProjectEditor() {
           </button>
           <button 
             onClick={handlePublish}
-            disabled={saving || !canEdit || projectData.status === 'published'}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: projectData.status === 'published' ? 'rgba(39, 174, 96, 0.5)' : '#27ae60', color: 'white', border: 'none', borderRadius: '6px', cursor: (saving || !canEdit || projectData.status === 'published') ? 'not-allowed' : 'pointer' }}
+            disabled={saving || !canEdit}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#27ae60', color: 'white', border: 'none', borderRadius: '6px', cursor: (saving || !canEdit) ? 'not-allowed' : 'pointer' }}
           >
             {saving ? <Loader2 size={16} className="spin" /> : <Globe size={16} />}
-            {projectData.status === 'published' ? 'Published' : 'Publish'}
+            {projectData.status === 'published' ? 'Republish' : 'Publish'}
           </button>
         </div>
       </div>
