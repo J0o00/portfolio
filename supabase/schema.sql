@@ -683,6 +683,7 @@ END $$;
 create table if not exists public.experience (
     id uuid default gen_random_uuid() primary key,
     role_title text not null,       
+    slug text unique not null,
     organization text not null,     
     location text,                  
     summary text,                   
@@ -816,5 +817,135 @@ create policy "Owners, Admins, Editors can update experience_tag_links" on publi
 
 drop policy if exists "Owners, Admins, Editors can delete experience_tag_links" on public.experience_tag_links;
 create policy "Owners, Admins, Editors can delete experience_tag_links" on public.experience_tag_links for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+
+
+-- 20. Skills CMS Table
+create table if not exists public.skills (
+    id uuid default gen_random_uuid() primary key,
+    name text not null,
+    slug text unique,
+    category text,
+    proficiency integer,
+    featured boolean default false,
+    display_order integer default 0,
+    description text,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+-- Trigger for updating updated_at timestamp
+drop trigger if exists update_skills_updated_at on public.skills;
+create trigger update_skills_updated_at
+before update on public.skills
+for each row execute function public.update_updated_at_column();
+
+-- Policies
+alter table public.skills enable row level security;
+drop policy if exists "Public can read skills" on public.skills;
+create policy "Public can read skills" on public.skills for select using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert skills" on public.skills;
+create policy "Owners, Admins, Editors can insert skills" on public.skills for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update skills" on public.skills;
+create policy "Owners, Admins, Editors can update skills" on public.skills for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+) with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can delete skills" on public.skills;
+create policy "Owners, Admins, Editors can delete skills" on public.skills for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+
+
+-- 21. Education CMS Table
+create table if not exists public.education (
+    id uuid default gen_random_uuid() primary key,
+    institution text not null,
+    degree text,
+    field_of_study text,
+    cgpa text,
+    start_date date,
+    end_date date,
+    description text,
+    status text not null default 'draft' check (status in ('draft', 'published', 'archived')),
+    featured boolean default false,
+    display_order integer default 0,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now()
+);
+
+-- Trigger for updating updated_at timestamp
+drop trigger if exists update_education_updated_at on public.education;
+create trigger update_education_updated_at
+before update on public.education
+for each row execute function public.update_updated_at_column();
+
+-- Policies
+alter table public.education enable row level security;
+drop policy if exists "Public can read education" on public.education;
+create policy "Public can read education" on public.education for select using (true);
+
+drop policy if exists "Owners, Admins, Editors can insert education" on public.education;
+create policy "Owners, Admins, Editors can insert education" on public.education for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update education" on public.education;
+create policy "Owners, Admins, Editors can update education" on public.education for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+) with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can delete education" on public.education;
+create policy "Owners, Admins, Editors can delete education" on public.education for delete to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+
+
+-- 22. Resume Uploads Table
+create table if not exists public.resume_uploads (
+    id uuid default gen_random_uuid() primary key,
+    file_url text not null,
+    original_filename text,
+    extracted_text text,
+    parsed_json jsonb,
+    status text default 'uploaded',
+    version integer default 1,
+    uploaded_at timestamptz default now()
+);
+
+-- Policies
+alter table public.resume_uploads enable row level security;
+
+drop policy if exists "Owners, Admins, Editors can read resume_uploads" on public.resume_uploads;
+create policy "Owners, Admins, Editors can read resume_uploads" on public.resume_uploads for select to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can insert resume_uploads" on public.resume_uploads;
+create policy "Owners, Admins, Editors can insert resume_uploads" on public.resume_uploads for insert to authenticated with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can update resume_uploads" on public.resume_uploads;
+create policy "Owners, Admins, Editors can update resume_uploads" on public.resume_uploads for update to authenticated using (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+) with check (
+    (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
+);
+
+drop policy if exists "Owners, Admins, Editors can delete resume_uploads" on public.resume_uploads;
+create policy "Owners, Admins, Editors can delete resume_uploads" on public.resume_uploads for delete to authenticated using (
     (select role from public.users_profile where id = auth.uid()) in ('Owner', 'Admin', 'Editor')
 );

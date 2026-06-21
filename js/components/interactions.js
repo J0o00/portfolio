@@ -135,9 +135,19 @@ export function initModalTransitions() {
 
             // Clean up deep link URL
             const url = new URL(window.location);
-            if (url.searchParams.has('project') || url.searchParams.has('research')) {
+            let updatedUrl = false;
+            if (url.searchParams.has('project') || url.searchParams.has('research') || url.searchParams.has('experience')) {
                 url.searchParams.delete('project');
                 url.searchParams.delete('research');
+                url.searchParams.delete('experience');
+                updatedUrl = true;
+            }
+            if (url.pathname.startsWith('/project/') || url.pathname.startsWith('/research/') || url.pathname.startsWith('/experience/')) {
+                url.pathname = '/';
+                updatedUrl = true;
+            }
+            
+            if (updatedUrl) {
                 window.history.pushState({}, '', url);
                 import('../seoManager.js').then(m => m.updateCanonicalUrl(url.href)).catch(e => console.error(e));
             }

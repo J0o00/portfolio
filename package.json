@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node --env-file=.env.local scripts/generate-sitemap.js",
-    "build": "vite build",
+    "build": "node scripts/generate-sitemap.js && vite build && node scripts/generate-pages.js",
     "preview": "vite preview"
   },
   "devDependencies": {

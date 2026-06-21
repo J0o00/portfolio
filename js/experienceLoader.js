@@ -19,6 +19,22 @@ export async function initExperience() {
     }
 
     renderExperienceTimeline(experiences, timelineGrid);
+
+    // Auto-scroll if deep linked
+    const urlParams = new URLSearchParams(window.location.search);
+    const experienceSlug = urlParams.get('experience') || 
+                           (window.__PRELOADED_CONTENT__?.type === 'experience' ? window.__PRELOADED_CONTENT__.slug : null);
+                           
+    if (experienceSlug) {
+      setTimeout(() => {
+        const el = document.getElementById(`exp-${experienceSlug}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+          el.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.1)';
+        }
+      }, 800); // Wait for page layout
+    }
   } catch (err) {
     console.error('Error loading experience:', err);
     timelineGrid.innerHTML = '<p>Failed to load experience. Please try again later.</p>';
@@ -42,6 +58,7 @@ function renderExperienceTimeline(experiences, container) {
 
     const el = document.createElement('div');
     el.className = 'timeline-item';
+    if (exp.slug) el.id = `exp-${exp.slug}`;
     el.innerHTML = `
       <canvas class="timeline-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:0.6; mix-blend-mode: screen;"></canvas>
       <div class="timeline-dot"></div>
@@ -57,5 +74,11 @@ function renderExperienceTimeline(experiences, container) {
     // The original site had canvas logic, we'll just preserve the structure.
     
     container.appendChild(el);
+    
+    // Trigger the staggered reveal animation manually since they are loaded asynchronously
+    setTimeout(() => {
+      el.style.transitionDelay = `${index * 70}ms`;
+      el.classList.add('child-visible');
+    }, 100);
   });
 }

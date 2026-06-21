@@ -16,7 +16,9 @@ export async function initResearch() {
 
     // Auto-open if deep linked
     const urlParams = new URLSearchParams(window.location.search);
-    const researchSlug = urlParams.get('research');
+    const researchSlug = urlParams.get('research') || 
+                         (window.__PRELOADED_CONTENT__?.type === 'research' ? window.__PRELOADED_CONTENT__.slug : null);
+                         
     if (researchSlug) {
       setTimeout(() => openDynamicResearchModal(researchSlug), 500);
     }
@@ -152,11 +154,15 @@ function renderResearchCards(researchItems) {
   }
 
   researchItems.forEach(r => {
-    const card = document.createElement('article');
+    const card = document.createElement('a');
+    card.href = `/research/${r.slug}`;
     card.className = 'research-notebook-card premium-card'; // keeping premium-card styles
     card.setAttribute('data-tilt', '');
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
+    card.style.display = 'block';
+    card.style.textDecoration = 'none';
+    card.style.color = 'inherit';
     
     if (r.cover_media && r.cover_media.url) {
       card.style.backgroundImage = `url('${r.cover_media.url}')`;
@@ -189,7 +195,10 @@ function renderResearchCards(researchItems) {
       </div>
     `;
 
-    card.addEventListener('click', () => openDynamicResearchModal(r.slug));
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      openDynamicResearchModal(r.slug);
+    });
     container.appendChild(card);
   });
 }
@@ -220,12 +229,10 @@ window.openDynamicResearchModal = async function(slug) {
   }
 
   // Update URL for deep linking
-  const newUrl = new URL(window.location);
-  newUrl.searchParams.set('research', slug);
-  window.history.pushState({ modal: 'research', slug }, '', newUrl);
+  window.history.pushState({ modal: 'research', slug }, '', `/research/${slug}`);
 
   // Import dynamically to avoid circular dependency
-  import('./seoManager.js').then(module => module.updateCanonicalUrl(newUrl.href));
+  import('./seoManager.js').then(module => module.updateCanonicalUrl(window.location.href));
 
   try {
     const details = await publicResearchService.getResearchBySlug(slug);

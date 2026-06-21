@@ -44,6 +44,7 @@ import { initProfileData } from './profileLoader.js';
 import { initProjects } from './projectsLoader.js';
 import { initResearch } from './researchLoader.js';
 import { initExperience } from './experienceLoader.js';
+import { initEducation } from './educationLoader.js';
 import { initSEO } from './seoManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("INIT RESEARCH");
     initResearch();
     initExperience();
+    initEducation();
     initSEO();
 
     // ── 1. Core rendering ──────────────────────────────────────────────────

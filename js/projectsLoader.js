@@ -14,7 +14,9 @@ export async function initProjects() {
 
     // Auto-open if deep linked
     const urlParams = new URLSearchParams(window.location.search);
-    const projectSlug = urlParams.get('project');
+    const projectSlug = urlParams.get('project') || 
+                        (window.__PRELOADED_CONTENT__?.type === 'project' ? window.__PRELOADED_CONTENT__.slug : null);
+                        
     if (projectSlug) {
       setTimeout(() => openDynamicProjectModal(projectSlug), 500);
     }
@@ -128,11 +130,15 @@ function renderProjects(projects) {
   }
 
   projects.forEach(p => {
-    const card = document.createElement('article');
+    const card = document.createElement('a');
+    card.href = `/project/${p.slug}`;
     card.className = 'premium-card';
     card.setAttribute('data-tilt', '');
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
+    card.style.display = 'block';
+    card.style.textDecoration = 'none';
+    card.style.color = 'inherit';
     
     if (p.cover_media && p.cover_media.url) {
       card.style.backgroundImage = `url('${p.cover_media.url}')`;
@@ -154,7 +160,10 @@ function renderProjects(projects) {
       </div>
     `;
 
-    card.addEventListener('click', () => openDynamicProjectModal(p.slug));
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      openDynamicProjectModal(p.slug);
+    });
     container.appendChild(card);
   });
 }
@@ -188,12 +197,10 @@ async function openDynamicProjectModal(slug) {
   }
 
   // Update URL for deep linking
-  const newUrl = new URL(window.location);
-  newUrl.searchParams.set('project', slug);
-  window.history.pushState({ modal: 'project', slug }, '', newUrl);
+  window.history.pushState({ modal: 'project', slug }, '', `/project/${slug}`);
 
   // Import dynamically to avoid circular dependency at top level
-  import('./seoManager.js').then(module => module.updateCanonicalUrl(newUrl.href));
+  import('./seoManager.js').then(module => module.updateCanonicalUrl(window.location.href));
 
   try {
     const projectDetails = await publicProjectService.getProjectBySlug(slug);

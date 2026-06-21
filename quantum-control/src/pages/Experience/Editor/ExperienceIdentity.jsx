@@ -19,6 +19,19 @@ export default function ExperienceIdentity({ data, update }) {
           </div>
 
           <div className="admin-form-group">
+            <label className="admin-label">Slug</label>
+            <input 
+              type="text" 
+              className="admin-input"
+              value={data?.slug || ''}
+              onChange={e => update({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') })}
+              placeholder="e.g. industrial-automation-engineer"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="admin-form-group">
             <label className="admin-label">Organization</label>
             <input 
               type="text" 
@@ -28,9 +41,7 @@ export default function ExperienceIdentity({ data, update }) {
               placeholder="e.g. Siemens COE"
             />
           </div>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="admin-form-group">
             <label className="admin-label">Location (Optional)</label>
             <input 

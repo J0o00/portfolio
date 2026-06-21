@@ -16,6 +16,14 @@ import ResearchEditor from './pages/Research/Editor/ResearchEditor';
 import Experience from './pages/Experience/Experience';
 import ExperienceEditor from './pages/Experience/Editor/ExperienceEditor';
 
+import Skills from './pages/Skills/Skills';
+import SkillEditor from './pages/Skills/Editor/SkillEditor';
+
+import Education from './pages/Education/Education';
+import EducationEditor from './pages/Education/Editor/EducationEditor';
+
+import ResumeSync from './pages/ResumeSync/ResumeSync';
+
 // Placeholder Pages
 const Settings = () => <div><h2>Settings</h2><p>Backup, Restore, and Audit logs.</p></div>;
 
@@ -49,6 +57,11 @@ export default function App() {
             <Route path="research/:id" element={<ResearchEditor />} />
             <Route path="experience" element={<Experience />} />
             <Route path="experience/:id" element={<ExperienceEditor />} />
+            <Route path="skills" element={<Skills />} />
+            <Route path="skills/:id" element={<SkillEditor />} />
+            <Route path="education" element={<Education />} />
+            <Route path="education/:id" element={<EducationEditor />} />
+            <Route path="resume-sync" element={<ResumeSync />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

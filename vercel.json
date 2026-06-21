@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/quantum-control/(.*)",
+      "destination": "/quantum-control/index.html"
+    }
+  ]
+}

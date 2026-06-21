@@ -15,9 +15,11 @@ export default function CreateExperienceModal({ onClose, onSubmit }) {
     setLoading(true);
     setError(null);
     try {
+      const slug = (roleTitle + '-' + organization).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       await onSubmit({ 
         role_title: roleTitle.trim(), 
         organization: organization.trim(),
+        slug,
         type 
       });
     } catch (err) {

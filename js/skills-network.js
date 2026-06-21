@@ -1,7 +1,9 @@
 // js/skills-network.js
 // Interactive skills network visualisation — replaces static tag badges in the skills section
 
-export function initSkillsNetwork() {
+import { publicSkillsService } from './services/publicSkillsService.js';
+
+export async function initSkillsNetwork() {
     const section = document.getElementById('skills');
     if (!section) return;
 
@@ -49,27 +51,40 @@ export function initSkillsNetwork() {
     else section.appendChild(wrapper);
 
     // ── Skill nodes data ─────────────────────────────────────────────────
-    const SKILLS = [
-        // Core — centre cluster
-        { label: 'PLC / TIA Portal', group: 'control',    size: 26 },
-        { label: 'SCADA',            group: 'control',    size: 22 },
-        { label: 'Ladder Logic',     group: 'control',    size: 18 },
-        { label: 'HMI Design',       group: 'control',    size: 18 },
-        // Power / Hardware cluster
-        { label: 'BMS Design',       group: 'hardware',   size: 24 },
-        { label: 'EV Systems',       group: 'hardware',   size: 22 },
-        { label: 'ESP32',            group: 'hardware',   size: 20 },
-        { label: 'PCB Design',       group: 'hardware',   size: 18 },
-        { label: 'Sensor Integration', group: 'hardware', size: 17 },
-        // Intelligence cluster
-        { label: 'MATLAB/Simulink',  group: 'intelligence', size: 24 },
-        { label: 'Digital Twins',    group: 'intelligence', size: 22 },
-        { label: 'ML Inference',     group: 'intelligence', size: 20 },
-        { label: 'Computer Vision',  group: 'intelligence', size: 19 },
-        { label: 'IoT / MQTT',       group: 'intelligence', size: 18 },
-        { label: 'Python',           group: 'intelligence', size: 18 },
-        { label: 'C / C++',          group: 'intelligence', size: 17 },
-    ];
+    let rawSkills = [];
+    try {
+        rawSkills = await publicSkillsService.getSkills();
+    } catch(e) {
+        console.error('Failed to load skills:', e);
+    }
+
+    // Fallback if empty database
+    if (!rawSkills || rawSkills.length === 0) {
+        rawSkills = [
+            { name: 'PLC / TIA Portal', category: 'control', proficiency: 86 },
+            { name: 'SCADA', category: 'control', proficiency: 73 },
+            { name: 'Ladder Logic', category: 'control', proficiency: 60 },
+            { name: 'HMI Design', category: 'control', proficiency: 60 },
+            { name: 'BMS Design', category: 'hardware', proficiency: 80 },
+            { name: 'EV Systems', category: 'hardware', proficiency: 73 },
+            { name: 'ESP32', category: 'hardware', proficiency: 66 },
+            { name: 'PCB Design', category: 'hardware', proficiency: 60 },
+            { name: 'Sensor Integration', category: 'hardware', proficiency: 56 },
+            { name: 'MATLAB/Simulink', category: 'intelligence', proficiency: 80 },
+            { name: 'Digital Twins', category: 'intelligence', proficiency: 73 },
+            { name: 'ML Inference', category: 'intelligence', proficiency: 66 },
+            { name: 'Computer Vision', category: 'intelligence', proficiency: 63 },
+            { name: 'IoT / MQTT', category: 'intelligence', proficiency: 60 },
+            { name: 'Python', category: 'intelligence', proficiency: 60 },
+            { name: 'C / C++', category: 'intelligence', proficiency: 56 }
+        ];
+    }
+
+    const SKILLS = rawSkills.map(s => ({
+        label: s.name,
+        group: s.category ? s.category.toLowerCase() : 'intelligence',
+        size: Math.max(14, (s.proficiency || 50) * 0.3) // Map 0-100 to size ~14-30
+    }));
 
     let COLORS = getThemeColors();
 
