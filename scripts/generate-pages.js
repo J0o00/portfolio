@@ -11,24 +11,24 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
 const ENV_FILE = path.join(ROOT_DIR, '.env.local');
 
-// 1. Initialize Supabase
-if (!fs.existsSync(ENV_FILE)) {
-  console.error('[Generate Pages] Missing .env.local file. Cannot fetch data.');
-  process.exit(1);
-}
-
-const envContent = fs.readFileSync(ENV_FILE, 'utf8');
-const extractEnv = (key) => {
-  const line = envContent.split('\n').find(l => l.startsWith(key + '='));
-  return line ? line.split('=')[1].trim() : null;
-};
-
-const SUPABASE_URL = extractEnv('VITE_SUPABASE_URL');
-const SUPABASE_ANON_KEY = extractEnv('VITE_SUPABASE_ANON_KEY');
+let SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+let SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('[Generate Pages] Missing Supabase credentials in .env.local');
-  process.exit(1);
+  if (fs.existsSync(ENV_FILE)) {
+    const envContent = fs.readFileSync(ENV_FILE, 'utf8');
+    const extractEnv = (key) => {
+      const line = envContent.split('\n').find(l => l.startsWith(key + '='));
+      return line ? line.split('=')[1].trim() : null;
+    };
+    SUPABASE_URL = extractEnv('VITE_SUPABASE_URL');
+    SUPABASE_ANON_KEY = extractEnv('VITE_SUPABASE_ANON_KEY');
+  }
+}
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('[Generate Pages] Missing Supabase credentials. Skipping page generation.');
+  process.exit(0);
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
