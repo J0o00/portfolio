@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/quantum-control/(.*)",
+      "source": "/quantum-control/:path*",
       "destination": "/quantum-control/index.html"
     }
   ]
