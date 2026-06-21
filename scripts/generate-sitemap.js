@@ -117,7 +117,8 @@ async function generateSitemap() {
     console.log(`[Sitemap Generator] Successfully generated sitemap.xml with ${projects.length} projects, ${research.length} research items, and ${experience ? experience.length : 0} experience items.`);
   } catch (err) {
     console.error('[Sitemap Generator] Error generating sitemap:', err);
-    process.exit(1);
+    console.error('[Sitemap Generator] Continuing build anyway so Vercel deployment doesn\\'t crash.');
+    process.exit(0);
   }
 }
 
