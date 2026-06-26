@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function MediaUpload({ onUploadSuccess }) {
   const { userProfile } = useAuth();
   const [file, setFile] = useState(null);
-  const [bucket, setBucket] = useState('profile-assets');
+  const [bucket, setBucket] = useState('media-library');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
@@ -89,6 +89,7 @@ export default function MediaUpload({ onUploadSuccess }) {
             onChange={(e) => setBucket(e.target.value)}
             disabled={uploading}
           >
+            <option value="media-library">media-library (Public)</option>
             <option value="profile-assets">profile-assets</option>
             <option value="projects">projects</option>
           </select>
