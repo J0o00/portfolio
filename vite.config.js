@@ -25,8 +25,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'quantum-control/index.html')
+        main: resolve(__dirname, 'index.html')
       }
     }
   },

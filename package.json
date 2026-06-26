@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-sitemap.js && vite build && node scripts/copy-admin-assets.js && node scripts/generate-pages.js",
+    "build": "node scripts/generate-sitemap.js && vite build && vite build --config quantum-control/vite.config.js && node scripts/generate-pages.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test"
