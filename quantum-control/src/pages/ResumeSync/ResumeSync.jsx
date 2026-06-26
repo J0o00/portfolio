@@ -100,6 +100,7 @@ export default function ResumeSync() {
       const { data: insertedUploads, error: dbError } = await supabase
         .from('resume_uploads')
         .insert([{
+          file_name: file.name,
           file_url: urlData.publicUrl,
           original_filename: file.name,
           version: nextVersion,
@@ -243,7 +244,7 @@ export default function ResumeSync() {
                   <td style={{ padding: '1rem 1.5rem', fontWeight: 700, color: '#0f172a' }}>v{u.version || 1}</td>
                   <td style={{ padding: '1rem' }}>
                     <a href={u.file_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>
-                      <FileText size={16} /> {u.original_filename}
+                      <FileText size={16} /> {u.original_filename || u.file_name}
                     </a>
                   </td>
                   <td style={{ padding: '1rem' }}>
