@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, RefreshCw, Monitor, Smartphone, LayoutDashboard, Eye } from 'lucide-react';
+import { ExternalLink, RefreshCw, Monitor, Smartphone, LayoutDashboard, Eye, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { restoreOldData } from '../utils/restoreData';
 
@@ -9,11 +9,27 @@ export default function Dashboard() {
   const [device, setDevice] = useState('desktop'); // 'desktop' or 'mobile'
   const [key, setKey] = useState(0);
 
+  const defaultUrl = import.meta.env.VITE_PORTFOLIO_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? window.location.origin + '/' : 'https://jovialjoyson.com');
+  const [portfolioUrl, setPortfolioUrl] = useState(() => localStorage.getItem('qc_portfolio_url') || defaultUrl);
+  const [isEditingUrl, setIsEditingUrl] = useState(false);
+  const [tempUrl, setTempUrl] = useState(portfolioUrl);
+
   useEffect(() => {
     restoreOldData();
   }, []);
 
   const refreshPreview = () => setKey(k => k + 1);
+
+  const handleSaveUrl = (e) => {
+    e.preventDefault();
+    const cleaned = tempUrl.trim() || defaultUrl;
+    setPortfolioUrl(cleaned);
+    localStorage.setItem('qc_portfolio_url', cleaned);
+    setIsEditingUrl(false);
+    setKey(k => k + 1);
+  };
+
+  const previewSrc = portfolioUrl.includes('?') ? `${portfolioUrl}&qc_preview=true` : `${portfolioUrl}?qc_preview=true`;
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -68,10 +84,26 @@ export default function Dashboard() {
 
       {activeTab === 'preview' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>Real-time view of your public portfolio</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>Real-time view of your public portfolio</p>
+              {isEditingUrl ? (
+                <form onSubmit={handleSaveUrl} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.4rem' }}>
+                  <input type="text" className="admin-input" value={tempUrl} onChange={e => setTempUrl(e.target.value)} placeholder="https://portfolio.vercel.app" style={{ padding: '0.35rem 0.65rem', fontSize: '0.85rem', width: '240px' }} autoFocus />
+                  <button type="submit" className="admin-button-primary" style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}>Save</button>
+                  <button type="button" className="admin-button-secondary" style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }} onClick={() => setIsEditingUrl(false)}>Cancel</button>
+                </form>
+              ) : (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--admin-text-muted)', marginTop: '0.25rem' }}>
+                  <span>Target: <strong style={{ color: 'var(--admin-text)' }}>{portfolioUrl}</strong></span>
+                  <button onClick={() => { setTempUrl(portfolioUrl); setIsEditingUrl(true); }} title="Change Preview Target URL" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--admin-accent)', display: 'inline-flex', alignItems: 'center' }}>
+                    <Edit2 size={13} />
+                  </button>
+                </div>
+              )}
+            </div>
             
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <div className="glass-panel" style={{ display: 'flex', padding: '0.25rem', gap: '0.25rem', borderRadius: '8px' }}>
                 <button 
                   onClick={() => setDevice('desktop')}
@@ -92,7 +124,7 @@ export default function Dashboard() {
               <button onClick={refreshPreview} className="admin-button-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>
                 <RefreshCw size={16} /> Refresh
               </button>
-              <a href="/" target="_blank" rel="noopener noreferrer" className="admin-button" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+              <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="admin-button" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
                 Open Site <ExternalLink size={16} />
               </a>
             </div>
@@ -127,7 +159,7 @@ export default function Dashboard() {
               )}
               <iframe
                 key={key}
-                src="/?preview=true"
+                src={previewSrc}
                 title="Portfolio Preview"
                 style={{ flex: 1, width: '100%', border: 'none', paddingTop: device === 'mobile' ? '20px' : '0' }}
               />
