@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { researchService } from '../../services/researchService';
 import CreateResearchModal from './CreateResearchModal';
+import { RetryState } from '../../components/ui/RetryState';
 import { Plus, Edit2, Trash2, Loader2, AlertCircle, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -95,29 +96,25 @@ export default function Research() {
         )}
       </header>
 
-      {error && (
-        <div style={{ padding: '1rem', background: 'rgba(255, 50, 50, 0.1)', color: '#ff3333', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <AlertCircle size={20} />
-          {error}
+      {!error && !loading && (
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+            <input 
+              type="text" 
+              className="admin-input" 
+              placeholder="Search by title, type, or reference..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: '2.5rem' }}
+            />
+          </div>
         </div>
       )}
 
-      {/* Search Bar */}
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
-          <input 
-            type="text" 
-            className="admin-input" 
-            placeholder="Search by title, type, or reference..." 
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={{ paddingLeft: '2.5rem' }}
-          />
-        </div>
-      </div>
-
-      {loading ? (
+      {error ? (
+        <RetryState message={error} onRetry={fetchResearch} isRetrying={loading} />
+      ) : loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
           <Loader2 size={32} className="spin" style={{ color: 'var(--admin-accent)' }} />
         </div>

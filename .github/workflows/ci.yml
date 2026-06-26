@@ -1,0 +1,50 @@
+name: Enterprise Platform Production Gatekeeper CI
+
+on:
+  push:
+    branches: [ main, v1.0 ]
+  pull_request:
+    branches: [ main, v1.0 ]
+
+jobs:
+  quality-gatekeeper:
+    name: Production Release Quality Gate
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://mock-ci-supabase.supabase.co
+      VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ci-mock-key
+    
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Execute Vitest Deterministic Unit & Integration Suites
+        run: npm test
+
+      - name: Install Playwright Chromium & System Dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Compile Production SSG & Asset Bundles
+        run: npm run build
+
+      - name: Execute Playwright Production Smoke Suite
+        run: npm run test:e2e
+
+      - name: Upload Build Artifacts & Quality Telemetry
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: platform-v1.0-release-dist
+          path: |
+            dist/
+            playwright-report/
+          retention-days: 14

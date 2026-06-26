@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { projectService } from '../../services/projectService';
 import CreateProjectModal from './CreateProjectModal';
+import { RetryState } from '../../components/ui/RetryState';
 import { Plus, Edit2, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -83,14 +84,9 @@ export default function Projects() {
         )}
       </header>
 
-      {error && (
-        <div style={{ padding: '1rem', background: 'rgba(255, 50, 50, 0.1)', color: '#ff3333', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <AlertCircle size={20} />
-          {error}
-        </div>
-      )}
-
-      {loading ? (
+      {error ? (
+        <RetryState message={error} onRetry={fetchProjects} isRetrying={loading} />
+      ) : loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
           <Loader2 size={32} className="spin" style={{ color: 'var(--admin-accent)' }} />
         </div>

@@ -124,7 +124,7 @@ export default function Education() {
                 <tr key={ed.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
                   <td style={{ padding: '1rem', fontWeight: 500 }}>{ed.institution}</td>
                   <td style={{ padding: '1rem', color: 'var(--admin-text-muted)' }}>
-                    {ed.degree || '-'} {ed.field_of_study ? \` in \${ed.field_of_study}\` : ''}
+                    {ed.degree || '-'} {ed.field_of_study ? ` in ${ed.field_of_study}` : ''}
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ 

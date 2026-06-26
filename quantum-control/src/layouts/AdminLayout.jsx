@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, Image as ImageIcon, Settings, UserCircle, LogOut, FolderKanban, BookOpen, Briefcase, Code2, GraduationCap, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, Image as ImageIcon, Settings, UserCircle, LogOut, FolderKanban, BookOpen, Briefcase, Code2, GraduationCap, FileText, Search } from 'lucide-react';
+import CommandPalette from '../components/ui/CommandPalette';
 
 export default function AdminLayout() {
   const { userProfile, signOut } = useAuth();
+  const [isCmdOpen, setIsCmdOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -29,10 +31,23 @@ export default function AdminLayout() {
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <div style={{ padding: '0 1rem', marginBottom: '2rem' }}>
+        <div style={{ padding: '0 1rem', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Quantum Control</h2>
           <span style={{ fontSize: '0.8rem', color: '#666' }}>Role: {userProfile?.role}</span>
         </div>
+
+        {/* Command Palette Trigger */}
+        <button 
+          onClick={() => setIsCmdOpen(true)}
+          style={{ 
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.85rem',
+            background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '1.5rem',
+            color: '#64748b', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', outline: 'none'
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Search size={16} /> Quick Search...</span>
+          <kbd style={{ fontSize: '0.7rem', background: '#f1f5f9', padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid #e2e8f0' }}>Ctrl+K</kbd>
+        </button>
 
         <nav style={{ flex: 1 }}>
           <NavLink to="/" style={navItemStyle} end><LayoutDashboard size={18} /> Dashboard</NavLink>
@@ -64,6 +79,8 @@ export default function AdminLayout() {
           <Outlet />
         </div>
       </main>
+
+      <CommandPalette isOpen={isCmdOpen} onClose={setIsCmdOpen} />
     </div>
   );
 }

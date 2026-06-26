@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { resolve } from 'path';
 
 // Custom plugin to ensure Vite dev server routes /quantum-control/* to the correct index.html
@@ -20,7 +21,7 @@ const adminRewritePlugin = () => {
 };
 
 export default defineConfig({
-  plugins: [react(), adminRewritePlugin()],
+  plugins: [react(), adminRewritePlugin(), visualizer({ filename: 'dist/stats.html', gzipSize: true })],
   build: {
     rollupOptions: {
       input: {
@@ -28,5 +29,10 @@ export default defineConfig({
         admin: resolve(__dirname, 'quantum-control/index.html')
       }
     }
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    exclude: ['tests/e2e/**', 'node_modules/**']
   }
 });

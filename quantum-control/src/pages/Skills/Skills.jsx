@@ -126,7 +126,7 @@ export default function Skills() {
                     {s.proficiency ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <div style={{ width: '60px', height: '6px', background: 'rgba(0,0,0,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ width: \`\${s.proficiency}%\`, height: '100%', background: 'var(--admin-accent)' }} />
+                          <div style={{ width: `${s.proficiency}%`, height: '100%', background: 'var(--admin-accent)' }} />
                         </div>
                         <span style={{ fontSize: '0.8rem', color: 'var(--admin-text-muted)' }}>{s.proficiency}%</span>
                       </div>
