@@ -3,6 +3,10 @@
     {
       "source": "/quantum-control/:path*",
       "destination": "/quantum-control/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
