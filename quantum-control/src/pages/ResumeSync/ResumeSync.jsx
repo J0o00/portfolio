@@ -90,10 +90,10 @@ export default function ResumeSync() {
       const fileName = `resume_${Date.now()}.${fileExt}`;
       const filePath = `resumes/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('media_library').upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from('profile-assets').upload(filePath, file);
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from('media_library').getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from('profile-assets').getPublicUrl(filePath);
       const nextVersion = uploads.length > 0 ? Math.max(...uploads.map(u => u.version || 1)) + 1 : 1;
 
       // 2. Insert DB record
