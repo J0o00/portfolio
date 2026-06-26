@@ -108,7 +108,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithGoogle = async () => {
-    const redirectBase = import.meta.env.BASE_URL !== '/' ? window.location.origin + import.meta.env.BASE_URL : window.location.origin;
+    const isSubfolder = typeof window !== 'undefined' && window.location.pathname.startsWith('/quantum-control');
+    const redirectBase = isSubfolder ? window.location.origin + '/quantum-control' : window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

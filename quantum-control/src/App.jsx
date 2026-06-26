@@ -45,12 +45,19 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const getRouterBasename = () => {
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/quantum-control')) {
+    return '/quantum-control';
+  }
+  return '';
+};
+
 export default function App() {
   console.log('[App] Quantum Control SPA starting...');
   return (
     <ToastProvider>
       <AuthProvider>
-        <BrowserRouter basename="/quantum-control">
+        <BrowserRouter basename={getRouterBasename()}>
           <ErrorBoundary>
             <Suspense fallback={<RouteFallback />}>
               <Routes>
