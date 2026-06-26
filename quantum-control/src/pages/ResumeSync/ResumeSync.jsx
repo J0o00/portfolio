@@ -29,7 +29,7 @@ export default function ResumeSync() {
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [hasSessionKey, setHasSessionKey] = useState(() => !!sessionStorage.getItem('RESUME_SESSION_AI_KEY'));
+  const [hasSessionKey, setHasSessionKey] = useState(() => !!(sessionStorage.getItem('RESUME_SESSION_AI_KEY') || import.meta.env.VITE_GEMINI_API_KEY));
 
   const fetchUploadsAndDbRecords = async () => {
     try {
@@ -130,7 +130,7 @@ export default function ResumeSync() {
 
   const handleConfirmTextAndParse = async () => {
     setIsPreviewModalOpen(false);
-    const sessionKey = sessionStorage.getItem('RESUME_SESSION_AI_KEY');
+    const sessionKey = sessionStorage.getItem('RESUME_SESSION_AI_KEY') || import.meta.env.VITE_GEMINI_API_KEY;
     if (!sessionKey) {
       setIsKeyModalOpen(true);
       return;
