@@ -11,23 +11,21 @@ export default function MediaCard({ asset, onDeleted }) {
   useEffect(() => {
     let isMounted = true;
     
-    const fetchSignedUrl = async () => {
-      // Create a 1-hour signed URL for previews and copying
-      const { data, error } = await supabase.storage
+    const resolveUrl = () => {
+      // Get permanent public CDN URL for public buckets
+      const { data } = supabase.storage
         .from(asset.bucket)
-        .createSignedUrl(asset.storage_path, 3600);
+        .getPublicUrl(asset.storage_path);
         
       if (isMounted) {
-        if (!error && data) {
-          setSignedUrl(data.signedUrl);
-        } else {
-          console.error('Error fetching signed URL:', error);
+        if (data && data.publicUrl) {
+          setSignedUrl(data.publicUrl);
         }
         setLoadingUrl(false);
       }
     };
     
-    fetchSignedUrl();
+    resolveUrl();
     
     return () => { isMounted = false; };
   }, [asset]);
