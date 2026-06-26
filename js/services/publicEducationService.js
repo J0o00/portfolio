@@ -5,7 +5,6 @@ export const publicEducationService = {
     const { data, error } = await supabase
       .from('education')
       .select('*')
-      .eq('status', 'published')
       .order('display_order', { ascending: true })
       .order('start_date', { ascending: false });
 
