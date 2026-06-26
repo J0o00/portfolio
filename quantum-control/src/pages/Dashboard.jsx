@@ -9,7 +9,7 @@ export default function Dashboard() {
   const [device, setDevice] = useState('desktop'); // 'desktop' or 'mobile'
   const [key, setKey] = useState(0);
 
-  const defaultUrl = import.meta.env.VITE_PORTFOLIO_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? window.location.origin + '/' : 'https://jovialjoyson.com');
+  const defaultUrl = import.meta.env.VITE_PORTFOLIO_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? window.location.origin + '/' : 'https://jovialjoyson.vercel.app');
   const [portfolioUrl, setPortfolioUrl] = useState(() => localStorage.getItem('qc_portfolio_url') || defaultUrl);
   const [isEditingUrl, setIsEditingUrl] = useState(false);
   const [tempUrl, setTempUrl] = useState(portfolioUrl);
