@@ -13,6 +13,8 @@
  */
 
 import { supabase } from '../../../../src/lib/supabase';
+import { getEducationList } from '../../services/educationService';
+import { getSkills } from '../../services/skillsService';
 
 export function slugify(text) {
   if (!text) return '';
@@ -207,6 +209,13 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
     target: `Upload #${uploadId || 'manual'} synced (${syncResults.experienceAdded + syncResults.skillsAdded + syncResults.projectsAdded} entities)`,
     timestamp: new Date().toISOString()
   }]);
+
+  try {
+    await getEducationList();
+    await getSkills();
+  } catch (e) {
+    console.error('Error syncing education/skills after resume sync:', e);
+  }
 
   return syncResults;
 }

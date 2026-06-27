@@ -1,5 +1,29 @@
 import { supabase } from '../../../src/lib/supabase';
 
+async function syncSkillsToProfile(allSkills) {
+  try {
+    let list = allSkills;
+    if (!list) {
+      const { data } = await supabase
+        .from('skills')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
+      list = data || [];
+    }
+    const { data: profile } = await supabase.from('site_profile').select('*').limit(1).single();
+    if (profile) {
+      const updatedSettings = {
+        ...(profile.about_settings || {}),
+        skills: list
+      };
+      await supabase.from('site_profile').update({ about_settings: updatedSettings }).eq('id', profile.id);
+    }
+  } catch (err) {
+    console.error('Error syncing skills to profile:', err);
+  }
+}
+
 export async function getSkills() {
   const { data, error } = await supabase
     .from('skills')
@@ -11,7 +35,9 @@ export async function getSkills() {
     console.error('Error fetching skills:', error);
     throw error;
   }
-  return data || [];
+  const res = data || [];
+  syncSkillsToProfile(res).catch(e => console.error(e));
+  return res;
 }
 
 export async function getSkillById(id) {
@@ -29,7 +55,7 @@ export async function getSkillById(id) {
 }
 
 function sanitizeSkillPayload(data) {
-  const allowed = ['name', 'slug', 'category', 'proficiency', 'featured', 'display_order', 'description'];
+  const allowed = ['name', 'slug', 'category', 'proficiency', 'featured', 'display_order'];
   const cleaned = {};
   allowed.forEach(key => {
     if (data[key] !== undefined) cleaned[key] = data[key];
@@ -38,7 +64,6 @@ function sanitizeSkillPayload(data) {
 }
 
 export async function createSkill(skillData) {
-  // ensure slug is clean
   if (!skillData.slug && skillData.name) {
     skillData.slug = skillData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
@@ -54,6 +79,7 @@ export async function createSkill(skillData) {
     console.error('Error creating skill:', error);
     throw error;
   }
+  await syncSkillsToProfile();
   return data;
 }
 
@@ -70,6 +96,7 @@ export async function updateSkill(id, skillData) {
     console.error(`Error updating skill ${id}:`, error);
     throw error;
   }
+  await syncSkillsToProfile();
   return data;
 }
 
@@ -83,5 +110,6 @@ export async function deleteSkill(id) {
     console.error(`Error deleting skill ${id}:`, error);
     throw error;
   }
+  await syncSkillsToProfile();
   return true;
 }

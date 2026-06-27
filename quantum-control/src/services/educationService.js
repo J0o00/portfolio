@@ -1,5 +1,74 @@
 import { supabase } from '../../../src/lib/supabase';
 
+function decodeEducationRow(row) {
+  if (!row) return row;
+  let desc = row.description || '';
+  let meta = { status: 'published', cgpa: null, featured: false, display_order: row.display_order || 0 };
+  const match = desc.match(/<!--meta:(.*?)-->/);
+  if (match && match[1]) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      meta = { ...meta, ...parsed };
+      desc = desc.replace(/<!--meta:.*?-->/g, '').trim();
+    } catch (e) {}
+  }
+  return {
+    ...row,
+    status: meta.status || 'published',
+    cgpa: meta.cgpa || null,
+    featured: !!meta.featured,
+    display_order: meta.display_order !== undefined ? meta.display_order : (row.display_order || 0),
+    description: desc
+  };
+}
+
+function encodeEducationPayload(data) {
+  const allowed = ['institution', 'degree', 'field_of_study', 'start_date', 'end_date', 'display_order', 'created_by'];
+  const cleaned = {};
+  allowed.forEach(key => {
+    if (data[key] !== undefined) cleaned[key] = data[key];
+  });
+  
+  let desc = data.description || '';
+  desc = desc.replace(/<!--meta:.*?-->/g, '').trim();
+  
+  const meta = {
+    status: data.status || 'published',
+    cgpa: data.cgpa || null,
+    featured: !!data.featured,
+    display_order: parseInt(data.display_order) || 0
+  };
+  
+  cleaned.description = (desc ? desc + '\n\n' : '') + `<!--meta:${JSON.stringify(meta)}-->`;
+  if (data.display_order !== undefined) cleaned.display_order = parseInt(data.display_order) || 0;
+  return cleaned;
+}
+
+async function syncEducationToProfile(allEduList) {
+  try {
+    let list = allEduList;
+    if (!list) {
+      const { data } = await supabase
+        .from('education')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('start_date', { ascending: false });
+      list = (data || []).map(decodeEducationRow);
+    }
+    const publishedList = list.filter(e => e.status === 'published');
+    const { data: profile } = await supabase.from('site_profile').select('*').limit(1).single();
+    if (profile) {
+      const updatedSettings = {
+        ...(profile.about_settings || {}),
+        education: publishedList
+      };
+      await supabase.from('site_profile').update({ about_settings: updatedSettings }).eq('id', profile.id);
+    }
+  } catch (err) {
+    console.error('Error syncing education to profile:', err);
+  }
+}
+
 export async function getEducationList() {
   const { data, error } = await supabase
     .from('education')
@@ -11,7 +80,9 @@ export async function getEducationList() {
     console.error('Error fetching education:', error);
     throw error;
   }
-  return data || [];
+  const decoded = (data || []).map(decodeEducationRow);
+  syncEducationToProfile(decoded).catch(e => console.error(e));
+  return decoded;
 }
 
 export async function getEducationById(id) {
@@ -25,20 +96,11 @@ export async function getEducationById(id) {
     console.error(`Error fetching education ${id}:`, error);
     throw error;
   }
-  return data;
-}
-
-function sanitizeEducationPayload(data) {
-  const allowed = ['institution', 'degree', 'field_of_study', 'start_date', 'end_date', 'description'];
-  const cleaned = {};
-  allowed.forEach(key => {
-    if (data[key] !== undefined) cleaned[key] = data[key];
-  });
-  return cleaned;
+  return decodeEducationRow(data);
 }
 
 export async function createEducation(educationData) {
-  const payload = sanitizeEducationPayload(educationData);
+  const payload = encodeEducationPayload(educationData);
   const { data, error } = await supabase
     .from('education')
     .insert([payload])
@@ -50,13 +112,14 @@ export async function createEducation(educationData) {
     throw error;
   }
   
-  // Create initial revision
-  await createRevision(data.id, data, educationData.created_by);
-  return data;
+  const decoded = decodeEducationRow(data);
+  await createRevision(data.id, decoded, educationData.created_by);
+  await syncEducationToProfile();
+  return decoded;
 }
 
 export async function updateEducation(id, educationData, userId) {
-  const payload = sanitizeEducationPayload(educationData);
+  const payload = encodeEducationPayload(educationData);
   const { data, error } = await supabase
     .from('education')
     .update(payload)
@@ -69,9 +132,10 @@ export async function updateEducation(id, educationData, userId) {
     throw error;
   }
 
-  // Create new revision
-  await createRevision(id, data, userId);
-  return data;
+  const decoded = decodeEducationRow(data);
+  await createRevision(id, decoded, userId);
+  await syncEducationToProfile();
+  return decoded;
 }
 
 export async function deleteEducation(id) {
@@ -84,6 +148,7 @@ export async function deleteEducation(id) {
     console.error(`Error deleting education ${id}:`, error);
     throw error;
   }
+  await syncEducationToProfile();
   return true;
 }
 
