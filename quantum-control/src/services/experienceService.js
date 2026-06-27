@@ -35,9 +35,12 @@ export const experienceService = {
 
   // CREATE
   async createExperience(experienceData) {
+    const allowed = ['role_title', 'organization', 'slug', 'type', 'summary', 'start_date', 'end_date', 'is_current', 'status', 'featured', 'featured_order', 'display_order', 'cover_media_id', 'created_by', 'updated_by'];
+    const payload = {};
+    allowed.forEach(key => { if (experienceData[key] !== undefined) payload[key] = experienceData[key]; });
     const { data, error } = await supabase
       .from('experience')
-      .insert([experienceData])
+      .insert([payload])
       .select()
       .single();
 
@@ -47,9 +50,12 @@ export const experienceService = {
 
   // UPDATE
   async updateExperience(id, updates) {
+    const allowed = ['role_title', 'organization', 'slug', 'type', 'summary', 'start_date', 'end_date', 'is_current', 'status', 'featured', 'featured_order', 'display_order', 'cover_media_id', 'created_by', 'updated_by'];
+    const payload = {};
+    allowed.forEach(key => { if (updates[key] !== undefined) payload[key] = updates[key]; });
     const { data, error } = await supabase
       .from('experience')
-      .update(updates)
+      .update(payload)
       .eq('id', id)
       .select()
       .single();

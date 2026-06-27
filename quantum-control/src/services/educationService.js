@@ -28,10 +28,20 @@ export async function getEducationById(id) {
   return data;
 }
 
+function sanitizeEducationPayload(data) {
+  const allowed = ['institution', 'degree', 'field_of_study', 'cgpa', 'start_date', 'end_date', 'status', 'featured', 'display_order', 'description'];
+  const cleaned = {};
+  allowed.forEach(key => {
+    if (data[key] !== undefined) cleaned[key] = data[key];
+  });
+  return cleaned;
+}
+
 export async function createEducation(educationData) {
+  const payload = sanitizeEducationPayload(educationData);
   const { data, error } = await supabase
     .from('education')
-    .insert([educationData])
+    .insert([payload])
     .select()
     .single();
 
@@ -46,9 +56,10 @@ export async function createEducation(educationData) {
 }
 
 export async function updateEducation(id, educationData, userId) {
+  const payload = sanitizeEducationPayload(educationData);
   const { data, error } = await supabase
     .from('education')
-    .update(educationData)
+    .update(payload)
     .eq('id', id)
     .select()
     .single();

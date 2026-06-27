@@ -33,7 +33,7 @@ export class AIProvider {
  * Concrete Gemini Provider
  */
 export class GeminiProvider extends AIProvider {
-  constructor(apiKey, modelName = 'gemini-2.5-flash') {
+  constructor(apiKey, modelName = 'gemini-2.0-flash') {
     super(apiKey);
     this.modelName = modelName;
   }
@@ -128,7 +128,7 @@ Output MUST strictly adhere to this JSON format:
   ]
 }`;
 
-    const modelsToTry = [this.modelName, 'gemini-2.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    const modelsToTry = [...new Set([this.modelName, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'])];
     let lastError = null;
     let actualModelUsed = this.modelName;
     let response = null;

@@ -28,15 +28,25 @@ export async function getSkillById(id) {
   return data;
 }
 
+function sanitizeSkillPayload(data) {
+  const allowed = ['name', 'slug', 'category', 'proficiency', 'featured', 'display_order', 'description'];
+  const cleaned = {};
+  allowed.forEach(key => {
+    if (data[key] !== undefined) cleaned[key] = data[key];
+  });
+  return cleaned;
+}
+
 export async function createSkill(skillData) {
   // ensure slug is clean
   if (!skillData.slug && skillData.name) {
     skillData.slug = skillData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
+  const payload = sanitizeSkillPayload(skillData);
 
   const { data, error } = await supabase
     .from('skills')
-    .insert([skillData])
+    .insert([payload])
     .select()
     .single();
 
@@ -48,9 +58,10 @@ export async function createSkill(skillData) {
 }
 
 export async function updateSkill(id, skillData) {
+  const payload = sanitizeSkillPayload(skillData);
   const { data, error } = await supabase
     .from('skills')
-    .update(skillData)
+    .update(payload)
     .eq('id', id)
     .select()
     .single();

@@ -6,35 +6,43 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://jovialjoyson.com/project/smart-home-automation-0001</loc>
+    <lastmod>2026-06-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jovialjoyson.com/project/animal-deterrent-system-9834</loc>
+    <lastmod>2026-06-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jovialjoyson.com/project/wireless-robotic-arm-9947</loc>
+    <lastmod>2026-06-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jovialjoyson.com/project/meditask-tele-rehabilitation-platform-9889</loc>
+    <lastmod>2026-06-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://jovialjoyson.com/project/digital-twin-motor</loc>
     <lastmod>2026-06-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://jovialjoyson.com/project/energy-management</loc>
-    <lastmod>2026-06-26</lastmod>
+    <loc>https://jovialjoyson.com/project/ebaja-ev-competition-9747</loc>
+    <lastmod>2026-06-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://jovialjoyson.com/project/autonomous-detection</loc>
-    <lastmod>2026-06-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://jovialjoyson.com/research/digital-twin-of-induction-motor</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://jovialjoyson.com/research/smart-predictive-maintenance-system</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://jovialjoyson.com/research/ai-assisted-motor-fault-detection</loc>
+    <loc>https://jovialjoyson.com/research/context-aware-digital-triplet-system-for-electrical-motors-under-variable-load-5721</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

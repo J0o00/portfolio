@@ -49,9 +49,12 @@ export const projectService = {
   },
 
   async updateProject(id, payload) {
+    const allowed = ['title', 'slug', 'excerpt', 'short_description', 'full_description', 'status', 'featured', 'featured_order', 'project_url', 'github_url', 'start_date', 'end_date', 'seo_title', 'seo_description', 'cover_media_id', 'created_by', 'updated_by'];
+    const cleaned = {};
+    allowed.forEach(key => { if (payload[key] !== undefined) cleaned[key] = payload[key]; });
     const { data, error } = await supabase
       .from('projects')
-      .update(payload)
+      .update(cleaned)
       .eq('id', id)
       .select()
       .single();

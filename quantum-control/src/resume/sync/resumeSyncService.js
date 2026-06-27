@@ -91,9 +91,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
       await supabase.from('experience').insert([{
         role_title: e.role_title,
         organization: e.organization,
-        location: e.location || null,
-        summary: e.summary || null,
-        description: e.description || null,
+        summary: e.summary || e.description || null,
         type: e.type || 'Work',
         start_date: e.start_date || null,
         end_date: e.end_date || null,
@@ -107,9 +105,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
       await supabase.from('experience').update({
         role_title: e.role_title || undefined,
         organization: e.organization || undefined,
-        location: e.location || undefined,
-        summary: e.summary || undefined,
-        description: e.description || undefined,
+        summary: e.summary || e.description || undefined,
         start_date: e.start_date || undefined,
         end_date: e.end_date || undefined,
         is_current: !!e.is_current,
@@ -144,6 +140,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         cgpa: ed.cgpa || undefined,
         start_date: ed.start_date || undefined,
         end_date: ed.end_date || undefined,
+        status: 'published',
         description: ed.description || undefined
       }).eq('id', item.existingId);
     }
