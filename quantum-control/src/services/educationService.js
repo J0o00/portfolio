@@ -29,7 +29,7 @@ export async function getEducationById(id) {
 }
 
 function sanitizeEducationPayload(data) {
-  const allowed = ['institution', 'degree', 'field_of_study', 'cgpa', 'start_date', 'end_date', 'status', 'featured', 'display_order', 'description'];
+  const allowed = ['institution', 'degree', 'field_of_study', 'start_date', 'end_date', 'description'];
   const cleaned = {};
   allowed.forEach(key => {
     if (data[key] !== undefined) cleaned[key] = data[key];

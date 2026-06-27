@@ -125,10 +125,8 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         institution: ed.institution,
         degree: ed.degree || null,
         field_of_study: ed.field_of_study || null,
-        cgpa: ed.cgpa || null,
         start_date: ed.start_date || null,
         end_date: ed.end_date || null,
-        status: 'published',
         description: ed.description || null
       }]);
       syncResults.educationAdded++;
@@ -137,10 +135,8 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         institution: ed.institution || undefined,
         degree: ed.degree || undefined,
         field_of_study: ed.field_of_study || undefined,
-        cgpa: ed.cgpa || undefined,
         start_date: ed.start_date || undefined,
         end_date: ed.end_date || undefined,
-        status: 'published',
         description: ed.description || undefined
       }).eq('id', item.existingId);
     }
