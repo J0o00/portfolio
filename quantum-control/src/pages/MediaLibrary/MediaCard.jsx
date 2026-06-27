@@ -11,15 +11,26 @@ export default function MediaCard({ asset, onDeleted }) {
   useEffect(() => {
     let isMounted = true;
     
-    const resolveUrl = () => {
-      // Get permanent public CDN URL for public buckets
-      const { data } = supabase.storage
+    const resolveUrl = async () => {
+      // Get permanent public CDN URL first
+      const { data: publicData } = supabase.storage
         .from(asset.bucket)
         .getPublicUrl(asset.storage_path);
         
+      let url = publicData?.publicUrl;
+
+      // Create signed URL as fallback/primary for admin view (works even if bucket is set to private)
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from(asset.bucket)
+        .createSignedUrl(asset.storage_path, 3600 * 24);
+
+      if (!signedError && signedData?.signedUrl) {
+        url = signedData.signedUrl;
+      }
+        
       if (isMounted) {
-        if (data && data.publicUrl) {
-          setSignedUrl(data.publicUrl);
+        if (url) {
+          setSignedUrl(url);
         }
         setLoadingUrl(false);
       }

@@ -3,6 +3,22 @@ import { supabase } from '../../../../src/lib/supabase';
 import { Search, X, Check, Upload } from 'lucide-react';
 import MediaUpload from './MediaUpload';
 
+function AssetThumbnail({ asset }) {
+  const [imgUrl, setImgUrl] = useState(() => supabase.storage.from(asset.bucket).getPublicUrl(asset.storage_path).data?.publicUrl);
+
+  useEffect(() => {
+    let isMounted = true;
+    supabase.storage.from(asset.bucket).createSignedUrl(asset.storage_path, 3600 * 24).then(({ data }) => {
+      if (isMounted && data?.signedUrl) {
+        setImgUrl(data.signedUrl);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [asset]);
+
+  return <img src={imgUrl} alt={asset.alt_text || asset.filename} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+}
+
 export default function MediaPickerModal({ isOpen, onClose, onSelect, multiple = false, initialSelectedIds = [] }) {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -159,7 +175,6 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, multiple =
               {filteredAssets.map(asset => {
                 const isSelected = selectedIds.includes(asset.id);
                 const isImage = asset.asset_type === 'image';
-                const fileUrl = supabase.storage.from(asset.bucket).getPublicUrl(asset.storage_path).data.publicUrl;
 
                 return (
                   <div 
@@ -178,11 +193,7 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, multiple =
                     }}
                   >
                     {isImage ? (
-                      <img 
-                        src={fileUrl} 
-                        alt={asset.alt_text || asset.filename} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
+                      <AssetThumbnail asset={asset} />
                     ) : (
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', wordBreak: 'break-all', textAlign: 'center', fontSize: '0.9rem' }}>
                         {asset.filename}
