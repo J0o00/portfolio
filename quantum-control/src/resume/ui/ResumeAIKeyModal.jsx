@@ -36,6 +36,7 @@ export default function ResumeAIKeyModal({ isOpen, onClose, onSave }) {
             <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}>Gemini API Key</label>
             <input 
               type="password" 
+              autoComplete="new-password"
               placeholder="AIzaSy..." 
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}

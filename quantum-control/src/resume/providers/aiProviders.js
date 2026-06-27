@@ -128,36 +128,62 @@ Output MUST strictly adhere to this JSON format:
   ]
 }`;
 
-    try {
-      const response = await ai.models.generateContent({
-        model: this.modelName,
-        contents: `${systemInstruction}\n\n=== RAW RESUME TEXT ===\n${rawText}`,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.1
+    const modelsToTry = [this.modelName, 'gemini-2.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    let lastError = null;
+    let actualModelUsed = this.modelName;
+    let response = null;
+
+    for (const model of modelsToTry) {
+      actualModelUsed = model;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          response = await ai.models.generateContent({
+            model: model,
+            contents: `${systemInstruction}\n\n=== RAW RESUME TEXT ===\n${rawText}`,
+            config: {
+              responseMimeType: 'application/json',
+              temperature: 0.1
+            }
+          });
+          break;
+        } catch (err) {
+          lastError = err;
+          const errMsg = err?.message || JSON.stringify(err);
+          const isOverloaded = errMsg.includes('503') || errMsg.includes('429') || errMsg.includes('high demand') || errMsg.includes('UNAVAILABLE') || errMsg.includes('RESOURCE_EXHAUSTED');
+          
+          if (isOverloaded && attempt < 3) {
+            console.warn(`[Gemini] Model ${model} busy (attempt ${attempt}/3). Retrying in ${attempt * 1500}ms...`);
+            await new Promise(r => setTimeout(r, attempt * 1500));
+          } else {
+            console.warn(`[Gemini] Model ${model} failed after ${attempt} attempt(s): ${errMsg}`);
+            break; // Try next model in list
+          }
         }
-      });
-
-      const processingTimeMs = Date.now() - startTime;
-      const rawJson = response.text || '{}';
-      let parsedData = {};
-
-      try {
-        parsedData = JSON.parse(rawJson);
-      } catch (e) {
-        throw new Error(`AI generated malformed JSON: ${e.message}`);
       }
-
-      return {
-        rawJson,
-        parsedData,
-        modelUsed: this.modelName,
-        promptVersion: PROMPT_VERSION,
-        processingTimeMs
-      };
-    } catch (err) {
-      throw new Error(`Gemini API execution failed: ${err.message}`);
+      if (response) break; // Success!
     }
+
+    if (!response) {
+      throw new Error(`All Gemini AI models are currently busy or unavailable. Last error: ${lastError?.message || lastError}`);
+    }
+
+    const processingTimeMs = Date.now() - startTime;
+    const rawJson = response.text || '{}';
+    let parsedData = {};
+
+    try {
+      parsedData = JSON.parse(rawJson);
+    } catch (e) {
+      throw new Error(`AI generated malformed JSON: ${e.message}`);
+    }
+
+    return {
+      rawJson,
+      parsedData,
+      modelUsed: actualModelUsed,
+      promptVersion: PROMPT_VERSION,
+      processingTimeMs
+    };
   }
 }
 
