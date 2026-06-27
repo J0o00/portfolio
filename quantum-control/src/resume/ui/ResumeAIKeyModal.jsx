@@ -31,27 +31,29 @@ export default function ResumeAIKeyModal({ isOpen, onClose, onSave }) {
           Enter your Google Gemini API Key. For enterprise security, this key is stored strictly in temporary browser memory (`sessionStorage`) and is cleared when you close the tab.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}>Gemini API Key</label>
-          <input 
-            type="password" 
-            placeholder="AIzaSy..." 
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
-          />
-        </div>
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155' }}>Gemini API Key</label>
+            <input 
+              type="password" 
+              placeholder="AIzaSy..." 
+              value={keyInput}
+              onChange={(e) => setKeyInput(e.target.value)}
+              style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
+            />
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#059669', background: '#ecfdf5', padding: '0.6rem 0.75rem', borderRadius: '8px' }}>
-          <ShieldAlert size={16} /> Zero backend storage. Never embedded in ES bundles.
-        </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#059669', background: '#ecfdf5', padding: '0.6rem 0.75rem', borderRadius: '8px' }}>
+            <ShieldAlert size={16} /> Zero backend storage. Never embedded in ES bundles.
+          </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
-          <button className="admin-button-secondary" style={{ padding: '0.6rem 1.25rem' }} onClick={onClose}>Cancel</button>
-          <button className="admin-button-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1.25rem' }} onClick={handleSave}>
-            <Check size={16} /> Save for Session
-          </button>
-        </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+            <button type="button" className="admin-button-secondary" style={{ padding: '0.6rem 1.25rem' }} onClick={onClose}>Cancel</button>
+            <button type="submit" className="admin-button-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1.25rem' }}>
+              <Check size={16} /> Save for Session
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

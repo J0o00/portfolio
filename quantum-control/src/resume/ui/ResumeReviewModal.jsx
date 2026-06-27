@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layers, Check, X, Edit3, AlertTriangle, ArrowRight, ShieldCheck, Database, RefreshCw } from 'lucide-react';
 
 export default function ResumeReviewModal({ isOpen, diffModel = {}, onClose, onSync }) {
@@ -6,6 +6,12 @@ export default function ResumeReviewModal({ isOpen, diffModel = {}, onClose, onS
   const [isDryRun, setIsDryRun] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [localDiff, setLocalDiff] = useState(() => JSON.parse(JSON.stringify(diffModel)));
+
+  useEffect(() => {
+    if (diffModel && Object.keys(diffModel).length > 0) {
+      setLocalDiff(JSON.parse(JSON.stringify(diffModel)));
+    }
+  }, [diffModel]);
 
   if (!isOpen) return null;
 
