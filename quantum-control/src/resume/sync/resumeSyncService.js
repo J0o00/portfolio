@@ -31,7 +31,7 @@ export function slugify(text) {
  * @param {string} userId 
  * @param {string} uploadId 
  */
-export async function syncApprovedChanges(approvedDiff, userId, uploadId) {
+export async function syncApprovedChanges(approvedDiff, userId, uploadId, uploadFileUrl) {
   const syncResults = {
     profileUpdated: false,
     skillsAdded: 0,
@@ -43,16 +43,22 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId) {
     researchAdded: 0
   };
 
-  // 1. Profile sync
+  // 1. Profile sync & resume_url update
+  const profileUpdates = {
+    updated_by: userId,
+    updated_at: new Date().toISOString()
+  };
+  if (uploadFileUrl) {
+    profileUpdates.resume_url = uploadFileUrl;
+  }
   if (approvedDiff.profile && approvedDiff.profile.selected) {
     const prof = approvedDiff.profile.entity;
-    await supabase.from('site_profile').update({
-      headline: prof.headline || undefined,
-      bio: prof.bio || undefined,
-      location: prof.location || undefined,
-      updated_by: userId,
-      updated_at: new Date().toISOString()
-    }).eq('id', 1);
+    if (prof.headline) profileUpdates.headline = prof.headline;
+    if (prof.bio) profileUpdates.bio = prof.bio;
+    if (prof.location) profileUpdates.location = prof.location;
+  }
+  await supabase.from('site_profile').update(profileUpdates).eq('id', 1);
+  if (approvedDiff.profile?.selected || uploadFileUrl) {
     syncResults.profileUpdated = true;
   }
 
@@ -68,9 +74,10 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId) {
         slug: slugify(s.name)
       }]);
       syncResults.skillsAdded++;
-    } else if (item.status === 'MODIFIED' && item.existingId) {
+    } else if (item.existingId) {
       await supabase.from('skills').update({
-        proficiency: s.proficiency
+        proficiency: s.proficiency || 80,
+        category: s.category || undefined
       }).eq('id', item.existingId);
       syncResults.skillsUpdated++;
     }
@@ -96,12 +103,17 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId) {
         created_by: userId
       }]);
       syncResults.experienceAdded++;
-    } else if (item.status === 'MODIFIED' && item.existingId) {
+    } else if (item.existingId) {
       await supabase.from('experience').update({
+        role_title: e.role_title || undefined,
+        organization: e.organization || undefined,
+        location: e.location || undefined,
         summary: e.summary || undefined,
         description: e.description || undefined,
         start_date: e.start_date || undefined,
         end_date: e.end_date || undefined,
+        is_current: !!e.is_current,
+        status: 'published',
         updated_by: userId
       }).eq('id', item.existingId);
       syncResults.experienceUpdated++;
@@ -124,10 +136,20 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId) {
         description: ed.description || null
       }]);
       syncResults.educationAdded++;
+    } else if (item.existingId) {
+      await supabase.from('education').update({
+        institution: ed.institution || undefined,
+        degree: ed.degree || undefined,
+        field_of_study: ed.field_of_study || undefined,
+        cgpa: ed.cgpa || undefined,
+        start_date: ed.start_date || undefined,
+        end_date: ed.end_date || undefined,
+        description: ed.description || undefined
+      }).eq('id', item.existingId);
     }
   }
 
-  // 5. Projects sync (Forced Draft)
+  // 5. Projects sync
   for (const item of (approvedDiff.projects || [])) {
     if (!item.selected) continue;
     const p = item.entity;
@@ -137,14 +159,21 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId) {
         slug: slugify(`${p.title}-${Date.now().toString().slice(-4)}`),
         short_description: p.short_description || null,
         full_description: p.full_description || null,
-        status: 'draft', // NEVER auto-publish
+        status: 'published',
         created_by: userId
       }]);
       syncResults.projectsAdded++;
+    } else if (item.existingId) {
+      await supabase.from('projects').update({
+        title: p.title || undefined,
+        short_description: p.short_description || undefined,
+        full_description: p.full_description || undefined,
+        status: 'published'
+      }).eq('id', item.existingId);
     }
   }
 
-  // 6. Research sync (Forced Draft)
+  // 6. Research sync
   for (const item of (approvedDiff.research || [])) {
     if (!item.selected) continue;
     const r = item.entity;
@@ -155,10 +184,18 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId) {
         type: r.type || 'Investigation',
         abstract: r.abstract || null,
         venue: r.venue || null,
-        status: 'draft', // NEVER auto-publish
+        status: 'published',
         created_by: userId
       }]);
       syncResults.researchAdded++;
+    } else if (item.existingId) {
+      await supabase.from('research').update({
+        title: r.title || undefined,
+        type: r.type || undefined,
+        abstract: r.abstract || undefined,
+        venue: r.venue || undefined,
+        status: 'published'
+      }).eq('id', item.existingId);
     }
   }
 

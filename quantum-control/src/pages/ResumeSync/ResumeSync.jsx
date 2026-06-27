@@ -40,6 +40,9 @@ export default function ResumeSync() {
         .order('uploaded_at', { ascending: false });
       if (upErr) throw upErr;
       setUploads(uploadList || []);
+      if (uploadList && uploadList.length > 0) {
+        setCurrentUpload(uploadList[0]);
+      }
 
       // Fetch active CMS records for diff comparison
       const [sk, ex, ed, pr, re, sp] = await Promise.all([
@@ -155,7 +158,7 @@ export default function ResumeSync() {
   const handleSyncToCMS = async (reviewedDiff) => {
     try {
       setCurrentStage('SYNCED');
-      await syncApprovedChanges(reviewedDiff, userProfile?.id, currentUpload?.id);
+      await syncApprovedChanges(reviewedDiff, userProfile?.id, currentUpload?.id, currentUpload?.file_url);
       setIsReviewModalOpen(false);
       alert('⚡ Resume successfully synchronized to active portfolio tables!');
       await fetchUploadsAndDbRecords();

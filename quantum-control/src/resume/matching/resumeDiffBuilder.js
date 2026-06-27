@@ -157,7 +157,7 @@ export function buildEntityDiffs(normalizedData, activeDbRecords) {
   });
   diff.summary.breakdown.education = eduAdded ? `+${eduAdded} new` : 'No changes';
 
-  // 5. Projects comparison (forced to Draft)
+  // 5. Projects comparison
   let projAdded = 0;
   (normalizedData.projects || []).forEach(proj => {
     const matched = (activeDbRecords.projects || []).find(p => p.title.toLowerCase() === proj.title.toLowerCase());
@@ -166,7 +166,7 @@ export function buildEntityDiffs(normalizedData, activeDbRecords) {
       diff.summary.matchedCount++;
     } else {
       diff.projects.push({ 
-        entity: { ...proj, status: 'draft' }, 
+        entity: { ...proj, status: 'published' }, 
         status: 'NEW', 
         existingId: null, 
         selected: true 
@@ -175,9 +175,9 @@ export function buildEntityDiffs(normalizedData, activeDbRecords) {
       diff.summary.newCount++;
     }
   });
-  diff.summary.breakdown.projects = projAdded ? `+${projAdded} new Drafts` : 'No changes';
+  diff.summary.breakdown.projects = projAdded ? `+${projAdded} new` : 'No changes';
 
-  // 6. Research comparison (forced to Draft)
+  // 6. Research comparison
   let resAdded = 0;
   (normalizedData.research || []).forEach(res => {
     const matched = (activeDbRecords.research || []).find(r => r.title.toLowerCase() === res.title.toLowerCase());
@@ -186,7 +186,7 @@ export function buildEntityDiffs(normalizedData, activeDbRecords) {
       diff.summary.matchedCount++;
     } else {
       diff.research.push({ 
-        entity: { ...res, status: 'draft' }, 
+        entity: { ...res, status: 'published' }, 
         status: 'NEW', 
         existingId: null, 
         selected: true 
@@ -195,7 +195,7 @@ export function buildEntityDiffs(normalizedData, activeDbRecords) {
       diff.summary.newCount++;
     }
   });
-  diff.summary.breakdown.research = resAdded ? `+${resAdded} new Drafts` : 'No changes';
+  diff.summary.breakdown.research = resAdded ? `+${resAdded} new` : 'No changes';
 
   return diff;
 }

@@ -116,6 +116,14 @@ function applyProfileDataToDOM(data) {
     }
   }
 
+  // Resume / CV
+  if (data.resume_url) {
+    const cvBtns = document.querySelectorAll('a[href="/resume.pdf"], a[href*="resume"]');
+    cvBtns.forEach(btn => {
+      btn.href = data.resume_url;
+    });
+  }
+
   // SEO Settings
   if (data.seo_settings) {
     if (data.seo_settings.meta_title) {
