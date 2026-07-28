@@ -69,18 +69,20 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
     if (!item.selected) continue;
     const s = item.entity;
     if (item.status === 'NEW') {
-      await supabase.from('skills').insert([{
+      const { error: insErr } = await supabase.from('skills').insert([{
         name: s.name,
         category: s.category || 'General',
         proficiency: s.proficiency || 80,
         slug: slugify(s.name)
       }]);
+      if (insErr) throw new Error(`Skills Insert Error: ${insErr.message}`);
       syncResults.skillsAdded++;
     } else if (item.existingId) {
-      await supabase.from('skills').update({
+      const { error: upErr } = await supabase.from('skills').update({
         proficiency: s.proficiency || 80,
         category: s.category || undefined
       }).eq('id', item.existingId);
+      if (upErr) throw new Error(`Skills Update Error: ${upErr.message}`);
       syncResults.skillsUpdated++;
     }
   }
@@ -90,7 +92,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
     if (!item.selected) continue;
     const e = item.entity;
     if (item.status === 'NEW') {
-      await supabase.from('experience').insert([{
+      const { error: insErr } = await supabase.from('experience').insert([{
         role_title: e.role_title,
         organization: e.organization,
         summary: e.summary || e.description || null,
@@ -102,9 +104,10 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         slug: slugify(`${e.organization}-${e.role_title}-${Date.now().toString().slice(-4)}`),
         created_by: userId
       }]);
+      if (insErr) throw new Error(`Experience Insert Error: ${insErr.message}`);
       syncResults.experienceAdded++;
     } else if (item.existingId) {
-      await supabase.from('experience').update({
+      const { error: upErr } = await supabase.from('experience').update({
         role_title: e.role_title || undefined,
         organization: e.organization || undefined,
         summary: e.summary || e.description || undefined,
@@ -114,6 +117,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         status: 'published',
         updated_by: userId
       }).eq('id', item.existingId);
+      if (upErr) throw new Error(`Experience Update Error: ${upErr.message}`);
       syncResults.experienceUpdated++;
     }
   }
@@ -123,7 +127,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
     if (!item.selected) continue;
     const ed = item.entity;
     if (item.status === 'NEW') {
-      await supabase.from('education').insert([{
+      const { error: insErr } = await supabase.from('education').insert([{
         institution: ed.institution,
         degree: ed.degree || null,
         field_of_study: ed.field_of_study || null,
@@ -131,9 +135,10 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         end_date: ed.end_date || null,
         description: ed.description || null
       }]);
+      if (insErr) throw new Error(`Education Insert Error: ${insErr.message}`);
       syncResults.educationAdded++;
     } else if (item.existingId) {
-      await supabase.from('education').update({
+      const { error: upErr } = await supabase.from('education').update({
         institution: ed.institution || undefined,
         degree: ed.degree || undefined,
         field_of_study: ed.field_of_study || undefined,
@@ -141,6 +146,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         end_date: ed.end_date || undefined,
         description: ed.description || undefined
       }).eq('id', item.existingId);
+      if (upErr) throw new Error(`Education Update Error: ${upErr.message}`);
     }
   }
 
@@ -149,7 +155,7 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
     if (!item.selected) continue;
     const p = item.entity;
     if (item.status === 'NEW') {
-      await supabase.from('projects').insert([{
+      const { error: insErr } = await supabase.from('projects').insert([{
         title: p.title,
         slug: slugify(`${p.title}-${Date.now().toString().slice(-4)}`),
         short_description: p.short_description || null,
@@ -157,8 +163,10 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         status: 'published',
         created_by: userId
       }]);
+      if (insErr) throw new Error(`Projects Insert Error: ${insErr.message}`);
       syncResults.projectsAdded++;
-    } else if (item.existingId) {
+    }
+ else if (item.existingId) {
       await supabase.from('projects').update({
         title: p.title || undefined,
         short_description: p.short_description || undefined,
@@ -173,18 +181,19 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
     if (!item.selected) continue;
     const r = item.entity;
     if (item.status === 'NEW') {
-      await supabase.from('research').insert([{
+      const { error: insErr } = await supabase.from('research').insert([{
         title: r.title,
         slug: slugify(`${r.title}-${Date.now().toString().slice(-4)}`),
-        type: r.type || 'Investigation',
         abstract: r.abstract || null,
-        venue: r.venue || null,
+        publication_date: r.publication_date || null,
         status: 'published',
         created_by: userId
       }]);
+      if (insErr) throw new Error(`Research Insert Error: ${insErr.message}`);
       syncResults.researchAdded++;
-    } else if (item.existingId) {
-      await supabase.from('research').update({
+    }
+ else if (item.existingId) {
+      const { error: upErr } = await supabase.from('research').update({
         title: r.title || undefined,
         type: r.type || undefined,
         abstract: r.abstract || undefined,
