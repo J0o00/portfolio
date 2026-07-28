@@ -26,7 +26,7 @@ const COL_ANGLE   = (Math.PI * 2) / N_COLS;
 const ROW_PHI     = ROW_PHI_DEG * Math.PI / 180;
 
 // ── Motion ────────────────────────────────────────────────────
-const AUTO_SPEED  = 0.00013;  // radians / ms (slow cinematic)
+const AUTO_SPEED  = 0.00004;  // radians / ms (very slow cinematic motion)
 const INERTIA     = 0.92;
 const ROT_SCALE   = 0.005;
 const CLICK_THRESH = 5;
@@ -311,7 +311,8 @@ export class LivingDome {
 
     if (!this.dragging) {
       // Perpetual slow spin
-      this.targetY -= AUTO_SPEED * (dt * 1000);
+      // dt is in ms, so multiply directly to keep speed consistent regardless of framerate
+      this.targetY -= AUTO_SPEED * dt;
       // Inertia carry
       this.targetY += this.velY;
       this.velY    *= INERTIA;
