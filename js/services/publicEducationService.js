@@ -19,8 +19,8 @@ export const publicEducationService = {
     const { data, error } = await supabase
       .from('education')
       .select('*')
-      .order('display_order', { ascending: true })
-      .order('start_date', { ascending: false });
+      .order('start_date', { ascending: false, nullsFirst: false })
+      .order('display_order', { ascending: true });
 
     if (error) {
       console.error('[PublicEducationService] Error fetching education:', error);

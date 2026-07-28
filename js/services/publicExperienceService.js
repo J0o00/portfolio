@@ -12,8 +12,8 @@ export const publicExperienceService = {
       .eq('status', 'published')
       .order('featured', { ascending: false })
       .order('featured_order', { ascending: true, nullsFirst: false })
-      .order('display_order', { ascending: true })
       .order('start_date', { ascending: false, nullsFirst: false })
+      .order('display_order', { ascending: true })
       .order('created_at', { ascending: false });
 
     if (error) {
