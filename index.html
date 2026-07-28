@@ -32,6 +32,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/animations.css">
+    <link rel="stylesheet" href="./css/gallery.css">
 
     <!-- Blocking theme init — prevents FOUC -->
     <script>
@@ -83,6 +84,7 @@
             <a href="#about">About</a>
             <a href="#research">Research</a>
             <a href="#featured">Work</a>
+            <a href="#gallery">Gallery</a>
             <a href="#experience">Experience</a>
             <a href="#education">Education</a>
             <a href="#contact">Contact</a>
@@ -106,6 +108,7 @@
     <a href="#about" class="mobile-nav-link">About</a>
     <a href="#research" class="mobile-nav-link">Research</a>
     <a href="#featured" class="mobile-nav-link">Work</a>
+    <a href="#gallery" class="mobile-nav-link">Gallery</a>
     <a href="#experience" class="mobile-nav-link">Experience</a>
     <a href="#education" class="mobile-nav-link">Education</a>
     <a href="#contact" class="mobile-nav-link">Contact</a>
@@ -379,6 +382,33 @@
     </div>
 </section>
 
+<!-- ─── LIVING GALLERY ────────────────────────────────────── -->
+<section id="gallery" aria-labelledby="gallery-title">
+
+  <!-- Full-bleed glass background -->
+  <div class="gallery-section__bg" aria-hidden="true"></div>
+
+  <!-- Ambient floating particles -->
+  <canvas class="gallery-particles" data-gallery-particles aria-hidden="true"></canvas>
+
+  <div class="container" style="position:relative; z-index:10;">
+
+    <div class="gallery-section__header">
+      <span class="section-label">Engineering Media</span>
+      <h2 class="section-title" id="gallery-title">Visual Archive</h2>
+      <p>Every project image, research figure, and achievement — live from the Media Library.</p>
+    </div>
+
+    <!-- Dome / Mobile gallery renders here -->
+    <div class="gallery-stage" data-gallery-stage>
+      <p class="gallery-status" data-gallery-status aria-live="polite">Initialising…</p>
+    </div>
+
+    <p class="gallery-hint" aria-hidden="true">Drag to explore &nbsp;↕</p>
+
+  </div>
+</section>
+
 <!-- ─── EXPERIENCE ───────────────────────────────────────── -->
 <section id="experience" class="container fade-in" style="--stagger:2" aria-labelledby="experience-title">
     <span class="section-label">Career &amp; Recognition</span>
@@ -575,6 +605,10 @@
 
 <!-- ─── SCRIPTS ───────────────────────────────────────────── -->
 <script type="module" src="./js/main.js"></script>
+<script type="module">
+  import { initLivingGallery } from './js/gallery/gallerySection.js';
+  initLivingGallery(document.getElementById('gallery'));
+</script>
 <script src="./js/utils/scroll.js" type="module"></script>
 <script src="./js/utils/theme.js" type="module"></script>
 <script src="./js/components/tilt.js" type="module"></script>
