@@ -84,12 +84,12 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
     if (!item.selected) continue;
     const s = item.entity;
     if (item.status === 'NEW') {
-      const { error: insErr } = await supabase.from('skills').insert([{
+      const { error: insErr } = await supabase.from('skills').upsert([{
         name: s.name,
         category: s.category || 'General',
         proficiency: s.proficiency || 80,
         slug: slugify(s.name)
-      }]);
+      }], { onConflict: 'slug' });
       if (insErr) throw new Error(`Skills Insert Error: ${insErr.message}`);
       syncResults.skillsAdded++;
     } else if (item.existingId) {
