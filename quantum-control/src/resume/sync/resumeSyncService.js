@@ -27,6 +27,21 @@ export function slugify(text) {
 }
 
 /**
+ * Safely parses and formats a date string for Supabase (YYYY-MM-DD).
+ */
+function safeDate(dateStr) {
+  if (!dateStr) return null;
+  // If it's already YYYY-MM-DD, just return it (or the first 10 chars)
+  if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    return dateStr.substring(0, 10);
+  }
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().split('T')[0];
+}
+
+
+/**
  * Executes approved batch sync against Supabase tables.
  *
  * @param {any} approvedDiff 
@@ -97,8 +112,8 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         organization: e.organization,
         summary: e.summary || e.description || null,
         type: e.type || 'Work',
-        start_date: e.start_date || null,
-        end_date: e.end_date || null,
+        start_date: safeDate(e.start_date),
+        end_date: safeDate(e.end_date),
         is_current: !!e.is_current,
         status: 'published',
         slug: slugify(`${e.organization}-${e.role_title}-${Date.now().toString().slice(-4)}`),
@@ -111,8 +126,8 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         role_title: e.role_title || undefined,
         organization: e.organization || undefined,
         summary: e.summary || e.description || undefined,
-        start_date: e.start_date || undefined,
-        end_date: e.end_date || undefined,
+        start_date: e.start_date ? safeDate(e.start_date) : undefined,
+        end_date: e.end_date ? safeDate(e.end_date) : undefined,
         is_current: !!e.is_current,
         status: 'published',
         updated_by: userId
@@ -131,8 +146,8 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         institution: ed.institution,
         degree: ed.degree || null,
         field_of_study: ed.field_of_study || null,
-        start_date: ed.start_date || null,
-        end_date: ed.end_date || null,
+        start_date: safeDate(ed.start_date),
+        end_date: safeDate(ed.end_date),
         description: ed.description || null
       }]);
       if (insErr) throw new Error(`Education Insert Error: ${insErr.message}`);
@@ -142,8 +157,8 @@ export async function syncApprovedChanges(approvedDiff, userId, uploadId, upload
         institution: ed.institution || undefined,
         degree: ed.degree || undefined,
         field_of_study: ed.field_of_study || undefined,
-        start_date: ed.start_date || undefined,
-        end_date: ed.end_date || undefined,
+        start_date: ed.start_date ? safeDate(ed.start_date) : undefined,
+        end_date: ed.end_date ? safeDate(ed.end_date) : undefined,
         description: ed.description || undefined
       }).eq('id', item.existingId);
       if (upErr) throw new Error(`Education Update Error: ${upErr.message}`);
