@@ -44,7 +44,6 @@ export class GeminiProvider extends AIProvider {
     }
 
     const startTime = Date.now();
-    const ai = new GoogleGenAI({ apiKey: this.apiKey });
 
     const systemInstruction = `You are an expert Principal Engineering Technical Recruiter and Data Ingestion AI.
 Your task is to accurately parse the provided raw resume text into a strict JSON structure matching an enterprise CMS database schema.
@@ -128,13 +127,28 @@ Output MUST strictly adhere to this JSON format:
   ]
 }`;
 
-    const modelsToTry = [...new Set([this.modelName, 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'])];
+    const modelsToTry = [...new Set([
+      this.modelName, 
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-lite-preview-02-05',
+      'gemini-1.5-flash', 
+      'gemini-1.5-flash-8b',
+      'gemini-1.5-pro'
+    ])];
     let lastError = null;
     let actualModelUsed = this.modelName;
     let response = null;
 
     for (const model of modelsToTry) {
       actualModelUsed = model;
+      
+      const clientOptions = { apiKey: this.apiKey };
+      // Fallback 1.5 models often require the v1 stable API.
+      if (model.includes('1.5')) {
+        clientOptions.httpOptions = { apiVersion: 'v1' };
+      }
+      const ai = new GoogleGenAI(clientOptions);
+
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           response = await ai.models.generateContent({
