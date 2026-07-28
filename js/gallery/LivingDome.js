@@ -113,6 +113,7 @@ export class LivingDome {
     this._raf      = null;
     this._last     = null;
     this.destroyed = false;
+    this.isVisible = true;
 
     this._init();
   }
@@ -152,6 +153,13 @@ export class LivingDome {
 
     this._resObs = new ResizeObserver(() => this._onResize());
     this._resObs.observe(this.container);
+    
+    // Performance: Pause rendering when off-screen
+    this._io = new IntersectionObserver(([entry]) => {
+      this.isVisible = entry.isIntersecting;
+    }, { threshold: 0 });
+    this._io.observe(this.container);
+    
     this._bindEvents();
 
     this._animate = this._animate.bind(this);
@@ -210,8 +218,8 @@ export class LivingDome {
 
   destroy() {
     this.destroyed = true;
-    this.pause();
-    this._resObs?.disconnect();
+    if (this._resObs) this._resObs.disconnect();
+    if (this._io) this._io.disconnect();
     this._unbindEvents();
     this._clear();
     const dom = this.renderer.domElement;
@@ -296,7 +304,9 @@ export class LivingDome {
     if (this.destroyed) return;
     this._raf = requestAnimationFrame(this._animate);
 
-    const dt = Math.min((now - (this._last ?? now)) / 1000, 0.1);
+    if (!this.isVisible) return; // Pause rendering completely when off-screen
+
+    const dt = this._last ? Math.min(now - this._last, 50) : 16;
     this._last = now;
 
     if (!this.dragging) {
@@ -308,13 +318,13 @@ export class LivingDome {
     }
 
     // Smoothly follow target
-    this.rotY      = damp(this.rotY, this.targetY, 9, dt);
+    this.rotY      = damp(this.rotY, this.targetY, 9, dt / 1000);
     this.dome.rotation.y = this.rotY;   // THE whole dome rotates as one
 
     // Hover animation
     this.meshes.forEach(m => {
       const prev = m.userData.hoverAmt;
-      m.userData.hoverAmt = damp(prev, m.userData.hoverTgt, 14, dt);
+      m.userData.hoverAmt = damp(prev, m.userData.hoverTgt, 14, dt / 1000);
       if (Math.abs(m.userData.hoverAmt - prev) > 0.001) {
         m.material.uniforms.hover.value = m.userData.hoverAmt;
         m.scale.setScalar(1 + m.userData.hoverAmt * 0.055);
@@ -405,10 +415,19 @@ export class LivingDome {
   }
 
   _onResize() {
-    const { clientWidth: W, clientHeight: H } = this.container;
-    if (!W || !H) return;
-    this.camera.aspect = W / H;
+    if (this.destroyed || !this.container) return;
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    this.camera.aspect = w / h;
+    
+    // Scale dome down (pull camera back) on smaller screens
+    const isMobile = w < 768;
+    this.camera.position.z = -(CAM_DIST + (isMobile ? 5 : 0));
+    
+    // Lower pixel ratio on mobile for better FPS
+    this.renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+    
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(W, H);
+    this.renderer.setSize(w, h);
   }
 }

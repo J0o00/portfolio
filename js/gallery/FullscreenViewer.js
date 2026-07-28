@@ -84,6 +84,21 @@ export class FullscreenViewer {
       else if (e.key === 'Tab') this._trapFocus(e);
     };
     document.addEventListener('keydown', this._onKeydown);
+
+    // Swipe gestures
+    let touchStartX = 0;
+    this.root.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    this.root.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) { // minimum swipe distance
+        if (diff > 0) this.next();     // swiped left
+        else this.previous();          // swiped right
+      }
+    }, { passive: true });
   }
 
   _trapFocus(e) {

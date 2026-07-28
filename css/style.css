@@ -2804,9 +2804,98 @@ html.theme-transition *::after {
 }
 
 @media (max-width: 768px) {
+  /* ── 1. TYPOGRAPHY & SPACING ── */
+  .hero-title {
+    font-size: clamp(2.5rem, 8vw, 4.5rem) !important;
+  }
+  .section-title {
+    font-size: clamp(2rem, 6vw, 3rem) !important;
+  }
+  .container {
+    padding: var(--space-md) 15px !important;
+  }
+  .hero-content {
+    padding-top: 100px;
+    align-items: center;
+    text-align: center;
+  }
+  .hero-actions {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+  }
+  .hero-actions .btn-primary, 
+  .hero-actions .btn-outline {
+    width: 100%;
+    text-align: center;
+  }
+  .metrics-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ── 2. GRIDS TO SINGLE COLUMN ── */
+  .projects-grid,
+  .research-grid,
+  .featured-work-grid,
+  .education-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .project-card, .research-card, .premium-featured-card, .edu-card {
+    width: 100%;
+    min-height: auto;
+  }
+  
+  .research-notebook {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── 3. TIMELINE ── */
+  .timeline {
+    padding-left: 1.5rem !important;
+  }
   .timeline-item {
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
-    padding: var(--space-md);
+    padding: var(--space-md) !important;
+    width: 100% !important; /* Force left align */
+    margin-left: 0 !important;
+  }
+  .timeline-dot {
+    left: -2.1rem !important;
+  }
+
+  /* ── 4. NAVIGATION & TOUCH ── */
+  .hamburger {
+    width: 48px;
+    height: 48px;
+    justify-content: center;
+    align-items: center;
+    margin-left: 0;
+  }
+  .mobile-menu-overlay {
+    /* lock screen size */
+    height: 100dvh; 
+    padding: 2rem;
+  }
+  .mobile-menu-overlay a {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  /* Buttons min tap area */
+  .btn-primary, .btn-secondary, .btn-outline, .btn-glass {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }

@@ -109,6 +109,8 @@
   display: block;
   width: 100% !important;
   height: 100% !important;
+  /* Prevent accidental page scrolling while dragging dome on mobile */
+  touch-action: none;
 }
 
 /* ── 6. SECTION VISIBLE STATE ────────────────────────────────── */
