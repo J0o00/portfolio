@@ -13,16 +13,16 @@
 import * as THREE from 'three';
 
 // ── Sphere geometry ───────────────────────────────────────────
-const SPHERE_R    = 15;         // sphere radius (larger to fill sideways)
-const CAM_DIST    = 18;         // camera distance from origin
-const N_COLS      = 24;         // columns around 360° (15° apart)
-const N_ROWS      = 7;          // rows top to bottom
-const ROW_PHI_DEG = 12.5;       // degrees between rows
-const CARD_W      = 3.4;        // card width
-const CARD_H      = 2.4;        // card height
+const SPHERE_R    = 16;         // sphere radius
+const CAM_DIST    = 19;         // camera distance from origin
+const N_COLS      = 36;         // columns around 360° (10° apart)
+const N_ROWS      = 9;          // rows top to bottom
+const ROW_PHI_DEG = 8.5;        // degrees between rows
+const CARD_W      = 2.4;        // smaller card width
+const CARD_H      = 1.75;       // smaller card height
 const FOV         = 70;         // wide-angle for strong barrel distortion
 
-const COL_ANGLE   = (Math.PI * 2) / N_COLS;   // column step in radians (~15°)
+const COL_ANGLE   = (Math.PI * 2) / N_COLS;
 const ROW_PHI     = ROW_PHI_DEG * Math.PI / 180;
 
 // ── Motion ────────────────────────────────────────────────────
