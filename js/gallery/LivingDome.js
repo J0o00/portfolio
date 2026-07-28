@@ -1,46 +1,38 @@
 /**
- * LivingDome.js — Infinite Billboard Carousel
+ * LivingDome.js — Sphere Dome Gallery
  *
- * Architecture:
- *  - Cards sit on the OUTSIDE of a cylinder arc, NOT inside a rotating group.
- *  - A global `scrollAngle` shifts all cards along the arc each frame.
- *  - When a card drifts past the right or left edge of the visible arc,
- *    its baseAngle is teleported to the opposite side (object-pool wrap).
- *  - Each frame, every card calls lookAt(camera) so it ALWAYS faces forward.
- *  - Result: perfectly front-facing photos, seamless endless loop, no gaps.
- *
- * Controls:
- *  - Drag left/right to rotate; release → physics inertia carries it.
- *  - Scroll wheel also rotates.
- *  - Click a card → onSelect(item, index) callback.
+ * Matches the reference image exactly:
+ *  - Cards placed on the OUTSIDE of a sphere in a grid (cols × rows)
+ *  - Cards face OUTWARD (not billboarded) — edges are angled naturally
+ *  - The entire dome GROUP rotates on Y axis as one piece (true dome spin)
+ *  - Barrel/fish-eye look from camera being relatively close to sphere
+ *  - 5 rows, 16 columns filling 360° → same images repeat as it spins
+ *  - Drag overrides auto-spin with physics inertia
  */
 
 import * as THREE from 'three';
 
-// ── Layout constants ──────────────────────────────────────────
-const ROWS        = 5;
-const RADIUS      = 13;       // cylinder radius — wider = more spread
-const CAM_DIST    = 16;       // camera sits this far in front of dome centre
-const COL_ANGLE   = 0.23;     // radians between column centres (smaller = denser)
-const VISIBLE_HALF= 1.65;     // half of the visible arc in radians (±95°)
-const ROW_HEIGHT  = 2.5;
-const CARD_W      = 2.75;
-const CARD_H      = 2.05;
+// ── Sphere geometry ───────────────────────────────────────────
+const SPHERE_R    = 9;         // sphere radius
+const CAM_DIST    = 12;        // camera distance from origin
+const N_COLS      = 16;        // columns around 360° (22.5° apart)
+const N_ROWS      = 5;         // rows top to bottom
+const ROW_PHI_DEG = 20;        // degrees between rows
+const CARD_W      = 3.15;      // card width (just under arc spacing at equator)
+const CARD_H      = 2.40;      // card height
+const FOV         = 75;        // wide-angle for strong barrel distortion
 
-// Derived: how many slots we create (enough to tile the arc + 4 buffer slots)
-const N_VISIBLE   = Math.ceil((VISIBLE_HALF * 2) / COL_ANGLE);
-const N_SLOTS     = N_VISIBLE + 4;
-const CONTENT_ARC = N_SLOTS * COL_ANGLE; // arc length before repeating
+const COL_ANGLE   = (Math.PI * 2) / N_COLS;   // column step in radians (~22.5°)
+const ROW_PHI     = ROW_PHI_DEG * Math.PI / 180;
 
 // ── Motion ────────────────────────────────────────────────────
-const AUTO_SPEED  = 0.00011; // radians per ms (slow, cinematic)
-const INERTIA     = 0.91;
-const ROT_SCALE   = 0.0042;
-const CLICK_THRESH = 6;
-const FOV         = 65;
+const AUTO_SPEED  = 0.00013;  // radians / ms (slow cinematic)
+const INERTIA     = 0.92;
+const ROT_SCALE   = 0.005;
+const CLICK_THRESH = 5;
 
 // ─────────────────────────────────────────────────────────────
-// GLSL
+// GLSL — rounded image card with hover rim glow
 // ─────────────────────────────────────────────────────────────
 const VERT = `
   varying vec2 vUv;
@@ -55,7 +47,6 @@ const FRAG = `
   uniform sampler2D map;
   uniform float hasTexture;
   uniform float hover;
-  uniform float edgeFade;    // 0 (centre) → 1 (off-screen edge)
   uniform vec3  accentColor;
   uniform vec3  cardBg;
   uniform float cornerR;
@@ -68,66 +59,57 @@ const FRAG = `
   }
 
   void main() {
-    float d     = sdRRect(vUv, cornerR);
-    float mask  = 1.0 - smoothstep(-0.018, 0.018, d);
+    float d    = sdRRect(vUv, cornerR);
+    float mask = 1.0 - smoothstep(-0.016, 0.016, d);
     if (mask < 0.005) discard;
 
     vec3 col = hasTexture > 0.5 ? texture2D(map, vUv).rgb : cardBg;
 
-    // glass sheen
-    col += smoothstep(0.0, 0.18, vUv.y - 0.82) * 0.10;
+    // Subtle top sheen
+    col += smoothstep(0.0, 0.2, vUv.y - 0.80) * 0.09;
 
-    // border highlight
-    col = mix(col, vec3(1.0), smoothstep(0.0, 0.035, -d) * 0.11);
+    // Inner border glow
+    col = mix(col, vec3(1.0), smoothstep(0.0, 0.04, -d) * 0.10);
 
-    // orange rim on hover
-    col = mix(col, accentColor, smoothstep(-0.22, 0.0, d) * hover * 0.44);
+    // Orange rim on hover
+    col = mix(col, accentColor, smoothstep(-0.22, 0.0, d) * hover * 0.45);
     col *= 1.0 + hover * 0.07;
 
-    // edge fade (dims cards near arc boundary)
-    col      *= 1.0 - edgeFade * 0.60;
-    float a   = mask * (1.0 - edgeFade * 0.50);
-
-    gl_FragColor = vec4(col, a);
+    gl_FragColor = vec4(col, mask);
   }
 `;
 
 // ── Helpers ───────────────────────────────────────────────────
 function lerp(a, b, t) { return a + (b - a) * t; }
 function damp(a, b, lam, dt) { return lerp(a, b, 1 - Math.exp(-lam * dt)); }
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 // ─────────────────────────────────────────────────────────────
 export class LivingDome {
   constructor(container, { onSelect } = {}) {
     this.container  = container;
     this.onSelect   = onSelect;
-
     this.items      = [];
-    this.slots      = [];   // { baseAngle, itemIdx, meshes[] }
-    this.meshes     = [];   // flat list for raycasting
-
+    this.meshes     = [];
     this.loader     = new THREE.TextureLoader();
-    this.texCache   = new Map();  // url → THREE.Texture
+    this.texCache   = new Map();
     this.texPending = new Set();
 
-    // Scroll state
-    this.scrollAngle  = 0;
-    this.targetScroll = 0;
-    this.velScroll    = 0;
+    // Rotation
+    this.rotY    = 0;
+    this.targetY = 0;
+    this.velY    = 0;
 
-    // Pointer state
+    // Pointer
     this.dragging   = false;
     this.dragDist   = 0;
     this.lastX      = 0;
     this.velSamples = [];
 
     // Hover
-    this.hovered  = null;
-    this.ndc      = new THREE.Vector2();
+    this.hovered   = null;
+    this.ndc       = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
 
-    // RAF
     this._raf      = null;
     this._last     = null;
     this.destroyed = false;
@@ -135,22 +117,24 @@ export class LivingDome {
     this._init();
   }
 
-  // ── Bootstrap ─────────────────────────────────────────────
+  // ── Bootstrap ──────────────────────────────────────────────
   _init() {
     const { clientWidth: W, clientHeight: H } = this.container;
 
     this.scene  = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(FOV, W / H, 0.1, 200);
-    // Camera in front of dome looking toward +Z (dome front is at z = -RADIUS)
+
+    // Camera outside the sphere looking at origin
+    this.camera = new THREE.PerspectiveCamera(FOV, W / H, 0.1, 300);
     this.camera.position.set(0, 0, -CAM_DIST);
     this.camera.lookAt(0, 0, 0);
 
+    // Transparent renderer — zero background, blends with page
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
-      alpha:     true,
+      alpha: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setClearColor(0x000000, 0);  // transparent bg
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.setSize(W, H);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -162,6 +146,10 @@ export class LivingDome {
     dom.setAttribute('aria-hidden', 'true');
     this.container.appendChild(dom);
 
+    // The dome — one group that rotates on Y axis as a single piece
+    this.dome = new THREE.Group();
+    this.scene.add(this.dome);
+
     this._resObs = new ResizeObserver(() => this._onResize());
     this._resObs.observe(this.container);
     this._bindEvents();
@@ -170,37 +158,46 @@ export class LivingDome {
     this._raf = requestAnimationFrame(this._animate);
   }
 
-  // ── Public API ────────────────────────────────────────────
+  // ── Public API ─────────────────────────────────────────────
   setItems(items) {
     this._clear();
     if (!items.length) return;
     this.items = items;
 
-    // Slot column layout: start at left edge of visible arc
-    const startAngle = -VISIBLE_HALF - COL_ANGLE; // one slot off screen to left
+    for (let col = 0; col < N_COLS; col++) {
+      const theta = col * COL_ANGLE;  // longitude (around Y)
 
-    for (let col = 0; col < N_SLOTS; col++) {
-      const baseAngle = startAngle + col * COL_ANGLE;
-      const itemIdx   = col % items.length;
+      for (let row = 0; row < N_ROWS; row++) {
+        // Latitude: centre row at 0, expand up and down
+        const phi = (row - (N_ROWS - 1) / 2) * ROW_PHI;
 
-      const meshes = [];
-      for (let row = 0; row < ROWS; row++) {
-        // Brick-lay: alternate columns offset vertically by half row
-        const yOff = (col % 2 === 0) ? 0 : ROW_HEIGHT * 0.45;
-        const y    = (row - (ROWS - 1) / 2) * ROW_HEIGHT + yOff;
+        // Spherical → Cartesian (front at -Z so camera at -CAM_DIST looks at it)
+        const cosP = Math.cos(phi);
+        const sinP = Math.sin(phi);
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
 
-        const mesh = this._makeCard(items[itemIdx]);
-        mesh.position.y = y; // x and z set each frame
-        this.scene.add(mesh);
-        meshes.push(mesh);
+        const x =  SPHERE_R * cosP * sinT;
+        const y =  SPHERE_R * sinP;
+        const z = -SPHERE_R * cosP * cosT;  // front hemisphere at negative Z
+
+        // Item for this cell (repeats when items.length < N_COLS * N_ROWS)
+        const itemIdx = (col * N_ROWS + row) % items.length;
+        const mesh    = this._makeCard(items[itemIdx]);
+
+        mesh.position.set(x, y, z);
+
+        // Face OUTWARD from sphere centre — this is what creates the dome look
+        // lookAt() from mesh.position pointing toward (2x, 2y, 2z) = outward direction
+        const outP = new THREE.Vector3(x * 2, y * 2, z * 2);
+        mesh.lookAt(outP);
+
+        this.dome.add(mesh);
+        this.meshes.push(mesh);
       }
-
-      this.slots.push({ baseAngle, itemIdx, meshes });
-      this.meshes.push(...meshes);
     }
 
-    this._placeSlots(); // initial placement before first frame
-    this._loadAllTextures();
+    this._loadTextures();
   }
 
   pause()  { if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; } }
@@ -222,7 +219,7 @@ export class LivingDome {
     this.renderer.dispose();
   }
 
-  // ── Card factory ──────────────────────────────────────────
+  // ── Card factory ───────────────────────────────────────────
   _makeCard(item) {
     const geo = new THREE.PlaneGeometry(CARD_W, CARD_H);
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
@@ -230,14 +227,14 @@ export class LivingDome {
       vertexShader:   VERT,
       fragmentShader: FRAG,
       transparent:    true,
+      side:           THREE.FrontSide,   // back-face culled automatically
       uniforms: {
         map:         { value: null },
         hasTexture:  { value: 0 },
         hover:       { value: 0 },
-        edgeFade:    { value: 0 },
         accentColor: { value: new THREE.Color('#E67E22') },
-        cardBg:      { value: new THREE.Color(isDark ? '#111C30' : '#DCE4F0') },
-        cornerR:     { value: 0.13 },
+        cardBg:      { value: new THREE.Color(isDark ? '#111C30' : '#D5DCE8') },
+        cornerR:     { value: 0.12 },
       },
     });
     const mesh = new THREE.Mesh(geo, mat);
@@ -248,14 +245,11 @@ export class LivingDome {
   }
 
   _clear() {
-    this.slots.forEach(slot =>
-      slot.meshes.forEach(m => {
-        this.scene.remove(m);
-        m.geometry.dispose();
-        m.material.dispose();
-      })
-    );
-    this.slots  = [];
+    this.meshes.forEach(m => {
+      this.dome.remove(m);
+      m.geometry.dispose();
+      m.material.dispose();
+    });
     this.meshes = [];
     this.texCache.forEach(t => t.dispose());
     this.texCache.clear();
@@ -263,20 +257,20 @@ export class LivingDome {
     this.hovered = null;
   }
 
-  // ── Texture loading ───────────────────────────────────────
-  _loadAllTextures() {
+  // ── Textures ───────────────────────────────────────────────
+  _loadTextures() {
     const seen = new Set();
     this.items.forEach(item => {
       if (!item.url || seen.has(item.url)) return;
       seen.add(item.url);
       if (this.texCache.has(item.url) || this.texPending.has(item.url)) return;
       this.texPending.add(item.url);
+
       this.loader.load(item.url, (tex) => {
         if (this.destroyed) return;
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
+        tex.colorSpace  = THREE.SRGBColorSpace;
+        tex.anisotropy  = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
         this.texCache.set(item.url, tex);
-        // Apply to all matching cards
         this.meshes.forEach(m => {
           if (m.userData.item?.url === item.url) {
             m.material.uniforms.map.value        = tex;
@@ -287,73 +281,7 @@ export class LivingDome {
     });
   }
 
-  _applyTexture(mesh) {
-    const url = mesh.userData.item?.url;
-    if (!url) return;
-    const tex = this.texCache.get(url);
-    if (tex) {
-      mesh.material.uniforms.map.value        = tex;
-      mesh.material.uniforms.hasTexture.value = 1;
-    }
-  }
-
-  // ── Slot placement (called every frame) ───────────────────
-  _placeSlots() {
-    const camPos = this.camera.position;
-    const items  = this.items;
-    if (!items.length) return;
-
-    this.slots.forEach(slot => {
-      // world angle = slot's base + current scroll
-      let worldAngle = slot.baseAngle + this.scrollAngle;
-
-      // ── WRAP: slot drifted off the left edge → teleport to right ──
-      if (worldAngle < -VISIBLE_HALF - COL_ANGLE * 2) {
-        slot.baseAngle += CONTENT_ARC;
-        worldAngle      = slot.baseAngle + this.scrollAngle;
-        // Advance to next set of items
-        slot.itemIdx = (slot.itemIdx + N_SLOTS) % items.length;
-        slot.meshes.forEach(m => {
-          m.userData.item = items[slot.itemIdx];
-          m.material.uniforms.hasTexture.value = 0;
-          this._applyTexture(m);
-        });
-      }
-      // ── WRAP: slot drifted off the right edge → teleport to left ──
-      else if (worldAngle > VISIBLE_HALF + COL_ANGLE * 2) {
-        slot.baseAngle -= CONTENT_ARC;
-        worldAngle      = slot.baseAngle + this.scrollAngle;
-        slot.itemIdx = ((slot.itemIdx - N_SLOTS) % items.length + items.length) % items.length;
-        slot.meshes.forEach(m => {
-          m.userData.item = items[slot.itemIdx];
-          m.material.uniforms.hasTexture.value = 0;
-          this._applyTexture(m);
-        });
-      }
-
-      // Position on outward convex cylinder (camera at z = -CAM_DIST, front at z = -RADIUS)
-      const x = Math.sin(worldAngle) * RADIUS;
-      const z = -Math.cos(worldAngle) * RADIUS;
-
-      // Edge fade: smooth 0→1 as card moves from ±0.7*VISIBLE_HALF to ±VISIBLE_HALF
-      const absA    = Math.abs(worldAngle);
-      const fadeStart = VISIBLE_HALF * 0.70;
-      const edgeFade  = clamp((absA - fadeStart) / (VISIBLE_HALF - fadeStart), 0, 1);
-
-      slot.meshes.forEach(m => {
-        m.position.x = x;
-        m.position.z = z;
-        m.material.uniforms.edgeFade.value = edgeFade;
-
-        // ── BILLBOARD: always face the camera ──
-        // Reset world rotation, then turn to face camera
-        m.rotation.set(0, 0, 0);
-        m.lookAt(camPos);
-      });
-    });
-  }
-
-  // ── Raycasting ────────────────────────────────────────────
+  // ── Raycasting ─────────────────────────────────────────────
   _hitTest(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.ndc.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
@@ -363,7 +291,7 @@ export class LivingDome {
     return hits.length ? hits[0].object : null;
   }
 
-  // ── Animation loop ────────────────────────────────────────
+  // ── Animation loop ─────────────────────────────────────────
   _animate(now) {
     if (this.destroyed) return;
     this._raf = requestAnimationFrame(this._animate);
@@ -372,20 +300,18 @@ export class LivingDome {
     this._last = now;
 
     if (!this.dragging) {
-      // Perpetual auto-scroll (moves right-to-left)
-      this.targetScroll -= AUTO_SPEED * (dt * 1000);
-      // Inertia after drag release
-      this.targetScroll += this.velScroll;
-      this.velScroll    *= INERTIA;
+      // Perpetual slow spin
+      this.targetY -= AUTO_SPEED * (dt * 1000);
+      // Inertia carry
+      this.targetY += this.velY;
+      this.velY    *= INERTIA;
     }
 
-    // Smooth follow
-    this.scrollAngle = damp(this.scrollAngle, this.targetScroll, 9, dt);
+    // Smoothly follow target
+    this.rotY      = damp(this.rotY, this.targetY, 9, dt);
+    this.dome.rotation.y = this.rotY;   // THE whole dome rotates as one
 
-    // Update all slot positions + billboarding + wrapping
-    this._placeSlots();
-
-    // Per-card hover animation
+    // Hover animation
     this.meshes.forEach(m => {
       const prev = m.userData.hoverAmt;
       m.userData.hoverAmt = damp(prev, m.userData.hoverTgt, 14, dt);
@@ -398,7 +324,7 @@ export class LivingDome {
     this.renderer.render(this.scene, this.camera);
   }
 
-  // ── Events ────────────────────────────────────────────────
+  // ── Events ─────────────────────────────────────────────────
   _bindEvents() {
     const dom = this.renderer.domElement;
 
@@ -407,7 +333,7 @@ export class LivingDome {
       this.dragDist   = 0;
       this.lastX      = e.clientX;
       this.velSamples = [];
-      this.velScroll  = 0;
+      this.velY       = 0;
       dom.style.cursor = 'grabbing';
       dom.setPointerCapture?.(e.pointerId);
     };
@@ -417,13 +343,12 @@ export class LivingDome {
         const dx       = e.clientX - this.lastX;
         this.lastX     = e.clientX;
         this.dragDist += Math.abs(dx);
-        // Drag right (dx > 0) → scroll backward (increase angle)
-        this.targetScroll += dx * ROT_SCALE;
+        this.targetY  += dx * ROT_SCALE;
         this.velSamples.push({ dx, t: performance.now() });
         if (this.velSamples.length > 6) this.velSamples.shift();
         return;
       }
-      // Hover detection
+      // Hover detection on non-drag movement
       const hit = this._hitTest(e);
       if (hit !== this.hovered) {
         if (this.hovered) this.hovered.userData.hoverTgt = 0;
@@ -438,8 +363,8 @@ export class LivingDome {
       if (this.dragging && this.velSamples.length >= 2) {
         const a  = this.velSamples[0];
         const b  = this.velSamples[this.velSamples.length - 1];
-        const elapsed = Math.max(b.t - a.t, 1);
-        this.velScroll = (b.dx / elapsed) * 14 * ROT_SCALE;
+        const dt = Math.max(b.t - a.t, 1);
+        this.velY = (b.dx / dt) * 16 * ROT_SCALE;
       }
       this.dragging = false;
       dom.style.cursor = this.hovered ? 'pointer' : 'grab';
@@ -457,7 +382,7 @@ export class LivingDome {
 
     this._onWheel = (e) => {
       e.preventDefault();
-      this.targetScroll += e.deltaY * -0.0005;
+      this.targetY -= e.deltaY * 0.0006;
     };
 
     dom.addEventListener('pointerdown',    this._onPD);
