@@ -1,40 +1,46 @@
 /**
- * LivingDome.js
- * Outward-convex barrel dome — camera sits OUTSIDE the cylinder,
- * images curve toward the viewer at centre and wrap away at the edges.
+ * LivingDome.js — Infinite Billboard Carousel
  *
- * Key visual differences from the previous version:
- *  - Camera is placed in front of the dome (z = -CAM_DIST)
- *  - Cards are on the OUTSIDE of the cylinder, facing the camera
- *  - Centre row/column is closest to viewer — edges taper away in 3D
- *  - Cards fill only the front-facing arc (~260°)
- *  - Background is fully transparent → integrates with page seamlessly
- *  - Subtle scale+brightness fall-off toward edges (not a separate box)
+ * Architecture:
+ *  - Cards sit on the OUTSIDE of a cylinder arc, NOT inside a rotating group.
+ *  - A global `scrollAngle` shifts all cards along the arc each frame.
+ *  - When a card drifts past the right or left edge of the visible arc,
+ *    its baseAngle is teleported to the opposite side (object-pool wrap).
+ *  - Each frame, every card calls lookAt(camera) so it ALWAYS faces forward.
+ *  - Result: perfectly front-facing photos, seamless endless loop, no gaps.
+ *
+ * Controls:
+ *  - Drag left/right to rotate; release → physics inertia carries it.
+ *  - Scroll wheel also rotates.
+ *  - Click a card → onSelect(item, index) callback.
  */
 
 import * as THREE from 'three';
 
-// ── Layout ────────────────────────────────────────────────────
+// ── Layout constants ──────────────────────────────────────────
 const ROWS        = 5;
-const RADIUS      = 11;        // cylinder radius
-const CAM_DIST    = 16;        // camera distance from cylinder axis
-const COL_ANGLE   = 0.20;      // radians between column centres
-const VISIBLE_ARC = Math.PI * 1.45;  // ~261° — only front hemisphere
+const RADIUS      = 13;       // cylinder radius — wider = more spread
+const CAM_DIST    = 16;       // camera sits this far in front of dome centre
+const COL_ANGLE   = 0.23;     // radians between column centres (smaller = denser)
+const VISIBLE_HALF= 1.65;     // half of the visible arc in radians (±95°)
 const ROW_HEIGHT  = 2.5;
-const CARD_W      = 2.7;
-const CARD_H      = 2.1;
+const CARD_W      = 2.75;
+const CARD_H      = 2.05;
+
+// Derived: how many slots we create (enough to tile the arc + 4 buffer slots)
+const N_VISIBLE   = Math.ceil((VISIBLE_HALF * 2) / COL_ANGLE);
+const N_SLOTS     = N_VISIBLE + 4;
+const CONTENT_ARC = N_SLOTS * COL_ANGLE; // arc length before repeating
 
 // ── Motion ────────────────────────────────────────────────────
-const AUTO_SPEED  = 0.000095;  // radians / ms — slow and cinematic
+const AUTO_SPEED  = 0.00011; // radians per ms (slow, cinematic)
 const INERTIA     = 0.91;
-const ROT_SCALE   = 0.0038;
-const CLICK_THRESH = 6;        // px of drag before treating as scroll
-
-// ── Camera / FOV ─────────────────────────────────────────────
-const FOV = 68;
+const ROT_SCALE   = 0.0042;
+const CLICK_THRESH = 6;
+const FOV         = 65;
 
 // ─────────────────────────────────────────────────────────────
-// GLSL shaders
+// GLSL
 // ─────────────────────────────────────────────────────────────
 const VERT = `
   varying vec2 vUv;
@@ -46,50 +52,43 @@ const VERT = `
 
 const FRAG = `
   precision highp float;
-
   uniform sampler2D map;
   uniform float hasTexture;
   uniform float hover;
-  uniform float falloff;    // 0 (centre) → 1 (edge): dims card naturally
+  uniform float edgeFade;    // 0 (centre) → 1 (off-screen edge)
   uniform vec3  accentColor;
   uniform vec3  cardBg;
   uniform float cornerR;
-
   varying vec2 vUv;
 
-  // Signed-distance for a rounded rectangle; returns neg inside, pos outside
-  float sdRoundRect(vec2 uv, float r) {
+  float sdRRect(vec2 uv, float r) {
     vec2 p = (uv - 0.5) * 2.0;
     vec2 q = abs(p) - (1.0 - r);
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
   }
 
   void main() {
-    float d    = sdRoundRect(vUv, cornerR);
-    float mask = 1.0 - smoothstep(-0.02, 0.02, d);
+    float d     = sdRRect(vUv, cornerR);
+    float mask  = 1.0 - smoothstep(-0.018, 0.018, d);
     if (mask < 0.005) discard;
 
-    // Base colour
     vec3 col = hasTexture > 0.5 ? texture2D(map, vUv).rgb : cardBg;
 
-    // Subtle top-edge sheen (glass feel)
-    float sheen = smoothstep(0.0, 0.18, vUv.y - 0.82) * 0.10;
-    col += sheen;
+    // glass sheen
+    col += smoothstep(0.0, 0.18, vUv.y - 0.82) * 0.10;
 
-    // Thin bright border
-    float border = smoothstep(0.0, 0.035, -d) * 0.12;
-    col = mix(col, vec3(1.0), border);
+    // border highlight
+    col = mix(col, vec3(1.0), smoothstep(0.0, 0.035, -d) * 0.11);
 
-    // Orange accent rim on hover
-    float rimZone = smoothstep(-0.20, 0.0, d);
-    col = mix(col, accentColor, rimZone * hover * 0.45);
+    // orange rim on hover
+    col = mix(col, accentColor, smoothstep(-0.22, 0.0, d) * hover * 0.44);
     col *= 1.0 + hover * 0.07;
 
-    // Edge fall-off: cards at cylinder edges fade/dim naturally
-    col *= 1.0 - falloff * 0.55;
-    float alpha = mask * (1.0 - falloff * 0.40);
+    // edge fade (dims cards near arc boundary)
+    col      *= 1.0 - edgeFade * 0.60;
+    float a   = mask * (1.0 - edgeFade * 0.50);
 
-    gl_FragColor = vec4(col, alpha);
+    gl_FragColor = vec4(col, a);
   }
 `;
 
@@ -98,32 +97,35 @@ function lerp(a, b, t) { return a + (b - a) * t; }
 function damp(a, b, lam, dt) { return lerp(a, b, 1 - Math.exp(-lam * dt)); }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-// ── Main Class ────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 export class LivingDome {
   constructor(container, { onSelect } = {}) {
     this.container  = container;
     this.onSelect   = onSelect;
+
     this.items      = [];
-    this.meshes     = [];
+    this.slots      = [];   // { baseAngle, itemIdx, meshes[] }
+    this.meshes     = [];   // flat list for raycasting
+
     this.loader     = new THREE.TextureLoader();
-    this.texCache   = new Map();
-    this.texPending = new Map();
+    this.texCache   = new Map();  // url → THREE.Texture
+    this.texPending = new Set();
 
-    // Rotation
-    this.rotY    = 0;
-    this.targetY = 0;
-    this.velY    = 0;
+    // Scroll state
+    this.scrollAngle  = 0;
+    this.targetScroll = 0;
+    this.velScroll    = 0;
 
-    // Pointer
+    // Pointer state
     this.dragging   = false;
     this.dragDist   = 0;
     this.lastX      = 0;
     this.velSamples = [];
 
     // Hover
-    this.hovered    = null;
-    this.ndc        = new THREE.Vector2();
-    this.raycaster  = new THREE.Raycaster();
+    this.hovered  = null;
+    this.ndc      = new THREE.Vector2();
+    this.raycaster = new THREE.Raycaster();
 
     // RAF
     this._raf      = null;
@@ -138,19 +140,17 @@ export class LivingDome {
     const { clientWidth: W, clientHeight: H } = this.container;
 
     this.scene  = new THREE.Scene();
-
-    // Camera outside the dome, looking at the front face
-    this.camera = new THREE.PerspectiveCamera(FOV, Math.max(W, 1) / Math.max(H, 1), 0.1, 200);
+    this.camera = new THREE.PerspectiveCamera(FOV, W / H, 0.1, 200);
+    // Camera in front of dome looking toward +Z (dome front is at z = -RADIUS)
     this.camera.position.set(0, 0, -CAM_DIST);
     this.camera.lookAt(0, 0, 0);
 
-    // Transparent renderer — integrates with page background
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha:     true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setClearColor(0x000000, 0); // fully transparent background
+    this.renderer.setClearColor(0x000000, 0);  // transparent bg
     this.renderer.setSize(W, H);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -162,57 +162,45 @@ export class LivingDome {
     dom.setAttribute('aria-hidden', 'true');
     this.container.appendChild(dom);
 
-    // Group that we rotate (the whole dome)
-    this.dome = new THREE.Group();
-    this.scene.add(this.dome);
-
     this._resObs = new ResizeObserver(() => this._onResize());
     this._resObs.observe(this.container);
-
     this._bindEvents();
+
     this._animate = this._animate.bind(this);
     this._raf = requestAnimationFrame(this._animate);
   }
 
   // ── Public API ────────────────────────────────────────────
   setItems(items) {
-    this._clearDome();
-    this.items = items;
+    this._clear();
     if (!items.length) return;
+    this.items = items;
 
-    const totalCols = Math.ceil(VISIBLE_ARC / COL_ANGLE) + 1;
-    const startAngle = -VISIBLE_ARC / 2;   // centre arc on front face
+    // Slot column layout: start at left edge of visible arc
+    const startAngle = -VISIBLE_HALF - COL_ANGLE; // one slot off screen to left
 
-    let idx = 0;
-    for (let col = 0; col < totalCols; col++) {
-      const angle = startAngle + col * COL_ANGLE;
+    for (let col = 0; col < N_SLOTS; col++) {
+      const baseAngle = startAngle + col * COL_ANGLE;
+      const itemIdx   = col % items.length;
 
-      // How far off-centre? 0 = front, 1 = edge
-      const normalised = Math.abs(angle) / (VISIBLE_ARC / 2);
-      const falloff    = Math.pow(normalised, 1.4);
-
+      const meshes = [];
       for (let row = 0; row < ROWS; row++) {
-        const item = items[idx % items.length];
-        idx++;
+        // Brick-lay: alternate columns offset vertically by half row
+        const yOff = (col % 2 === 0) ? 0 : ROW_HEIGHT * 0.45;
+        const y    = (row - (ROWS - 1) / 2) * ROW_HEIGHT + yOff;
 
-        // Outward convex: card on OUTSIDE of cylinder facing -Z (camera direction)
-        const x = Math.sin(angle) * RADIUS;
-        const z = -Math.cos(angle) * RADIUS;
-        // Brick offset on alternate columns
-        const yOffset = (col % 2 === 0) ? 0 : ROW_HEIGHT * 0.5;
-        const y = (row - (ROWS - 1) / 2) * ROW_HEIGHT + yOffset;
-
-        const mesh = this._makeCard(item, falloff);
-        mesh.position.set(x, y, z);
-        // Rotate card to face outward (away from cylinder axis, toward camera)
-        mesh.rotation.y = angle;
-
-        this.dome.add(mesh);
-        this.meshes.push(mesh);
+        const mesh = this._makeCard(items[itemIdx]);
+        mesh.position.y = y; // x and z set each frame
+        this.scene.add(mesh);
+        meshes.push(mesh);
       }
+
+      this.slots.push({ baseAngle, itemIdx, meshes });
+      this.meshes.push(...meshes);
     }
 
-    this._lazyLoad();
+    this._placeSlots(); // initial placement before first frame
+    this._loadAllTextures();
   }
 
   pause()  { if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; } }
@@ -228,44 +216,46 @@ export class LivingDome {
     this.pause();
     this._resObs?.disconnect();
     this._unbindEvents();
-    this._clearDome();
+    this._clear();
     const dom = this.renderer.domElement;
     dom?.parentElement?.removeChild(dom);
     this.renderer.dispose();
   }
 
-  // ── Card Factory ──────────────────────────────────────────
-  _makeCard(item, falloff) {
+  // ── Card factory ──────────────────────────────────────────
+  _makeCard(item) {
     const geo = new THREE.PlaneGeometry(CARD_W, CARD_H);
-    const isDark = this._isDark();
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
     const mat = new THREE.ShaderMaterial({
       vertexShader:   VERT,
       fragmentShader: FRAG,
       transparent:    true,
-      side:           THREE.FrontSide,
       uniforms: {
         map:         { value: null },
         hasTexture:  { value: 0 },
         hover:       { value: 0 },
-        falloff:     { value: falloff },
+        edgeFade:    { value: 0 },
         accentColor: { value: new THREE.Color('#E67E22') },
-        cardBg:      { value: new THREE.Color(isDark ? '#111C30' : '#E2E8F0') },
+        cardBg:      { value: new THREE.Color(isDark ? '#111C30' : '#DCE4F0') },
         cornerR:     { value: 0.13 },
       },
     });
-    const mesh        = new THREE.Mesh(geo, mat);
+    const mesh = new THREE.Mesh(geo, mat);
     mesh.userData.item     = item;
     mesh.userData.hoverAmt = 0;
     mesh.userData.hoverTgt = 0;
     return mesh;
   }
 
-  _clearDome() {
-    this.meshes.forEach(m => {
-      this.dome.remove(m);
-      m.geometry.dispose();
-      m.material.dispose();
-    });
+  _clear() {
+    this.slots.forEach(slot =>
+      slot.meshes.forEach(m => {
+        this.scene.remove(m);
+        m.geometry.dispose();
+        m.material.dispose();
+      })
+    );
+    this.slots  = [];
     this.meshes = [];
     this.texCache.forEach(t => t.dispose());
     this.texCache.clear();
@@ -273,37 +263,93 @@ export class LivingDome {
     this.hovered = null;
   }
 
-  // ── Lazy Texture Loading ──────────────────────────────────
-  _lazyLoad() {
+  // ── Texture loading ───────────────────────────────────────
+  _loadAllTextures() {
     const seen = new Set();
-    this.meshes.forEach(mesh => {
-      const url = mesh.userData.item?.url;
-      if (!url || seen.has(url)) return;
-      seen.add(url);
-
-      if (this.texCache.has(url)) {
-        this._applyTex(url, this.texCache.get(url));
-        return;
-      }
-      if (this.texPending.has(url)) return;
-      this.texPending.set(url, true);
-
-      this.loader.load(url, (tex) => {
+    this.items.forEach(item => {
+      if (!item.url || seen.has(item.url)) return;
+      seen.add(item.url);
+      if (this.texCache.has(item.url) || this.texPending.has(item.url)) return;
+      this.texPending.add(item.url);
+      this.loader.load(item.url, (tex) => {
         if (this.destroyed) return;
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
-        this.texCache.set(url, tex);
-        this._applyTex(url, tex);
+        this.texCache.set(item.url, tex);
+        // Apply to all matching cards
+        this.meshes.forEach(m => {
+          if (m.userData.item?.url === item.url) {
+            m.material.uniforms.map.value        = tex;
+            m.material.uniforms.hasTexture.value = 1;
+          }
+        });
       }, undefined, () => {});
     });
   }
 
-  _applyTex(url, tex) {
-    this.meshes.forEach(mesh => {
-      if (mesh.userData.item?.url === url) {
-        mesh.material.uniforms.map.value        = tex;
-        mesh.material.uniforms.hasTexture.value = 1;
+  _applyTexture(mesh) {
+    const url = mesh.userData.item?.url;
+    if (!url) return;
+    const tex = this.texCache.get(url);
+    if (tex) {
+      mesh.material.uniforms.map.value        = tex;
+      mesh.material.uniforms.hasTexture.value = 1;
+    }
+  }
+
+  // ── Slot placement (called every frame) ───────────────────
+  _placeSlots() {
+    const camPos = this.camera.position;
+    const items  = this.items;
+    if (!items.length) return;
+
+    this.slots.forEach(slot => {
+      // world angle = slot's base + current scroll
+      let worldAngle = slot.baseAngle + this.scrollAngle;
+
+      // ── WRAP: slot drifted off the left edge → teleport to right ──
+      if (worldAngle < -VISIBLE_HALF - COL_ANGLE * 2) {
+        slot.baseAngle += CONTENT_ARC;
+        worldAngle      = slot.baseAngle + this.scrollAngle;
+        // Advance to next set of items
+        slot.itemIdx = (slot.itemIdx + N_SLOTS) % items.length;
+        slot.meshes.forEach(m => {
+          m.userData.item = items[slot.itemIdx];
+          m.material.uniforms.hasTexture.value = 0;
+          this._applyTexture(m);
+        });
       }
+      // ── WRAP: slot drifted off the right edge → teleport to left ──
+      else if (worldAngle > VISIBLE_HALF + COL_ANGLE * 2) {
+        slot.baseAngle -= CONTENT_ARC;
+        worldAngle      = slot.baseAngle + this.scrollAngle;
+        slot.itemIdx = ((slot.itemIdx - N_SLOTS) % items.length + items.length) % items.length;
+        slot.meshes.forEach(m => {
+          m.userData.item = items[slot.itemIdx];
+          m.material.uniforms.hasTexture.value = 0;
+          this._applyTexture(m);
+        });
+      }
+
+      // Position on outward convex cylinder (camera at z = -CAM_DIST, front at z = -RADIUS)
+      const x = Math.sin(worldAngle) * RADIUS;
+      const z = -Math.cos(worldAngle) * RADIUS;
+
+      // Edge fade: smooth 0→1 as card moves from ±0.7*VISIBLE_HALF to ±VISIBLE_HALF
+      const absA    = Math.abs(worldAngle);
+      const fadeStart = VISIBLE_HALF * 0.70;
+      const edgeFade  = clamp((absA - fadeStart) / (VISIBLE_HALF - fadeStart), 0, 1);
+
+      slot.meshes.forEach(m => {
+        m.position.x = x;
+        m.position.z = z;
+        m.material.uniforms.edgeFade.value = edgeFade;
+
+        // ── BILLBOARD: always face the camera ──
+        // Reset world rotation, then turn to face camera
+        m.rotation.set(0, 0, 0);
+        m.lookAt(camPos);
+      });
     });
   }
 
@@ -313,11 +359,11 @@ export class LivingDome {
     this.ndc.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
     this.ndc.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.ndc, this.camera);
-    const hits = this.raycaster.intersectObjects(this.meshes);
+    const hits = this.raycaster.intersectObjects(this.meshes, false);
     return hits.length ? hits[0].object : null;
   }
 
-  // ── Animation Loop ────────────────────────────────────────
+  // ── Animation loop ────────────────────────────────────────
   _animate(now) {
     if (this.destroyed) return;
     this._raf = requestAnimationFrame(this._animate);
@@ -326,21 +372,26 @@ export class LivingDome {
     this._last = now;
 
     if (!this.dragging) {
-      this.targetY += AUTO_SPEED * (dt * 1000);
-      this.targetY += this.velY;
-      this.velY    *= INERTIA;
+      // Perpetual auto-scroll (moves right-to-left)
+      this.targetScroll -= AUTO_SPEED * (dt * 1000);
+      // Inertia after drag release
+      this.targetScroll += this.velScroll;
+      this.velScroll    *= INERTIA;
     }
 
-    this.rotY      = damp(this.rotY, this.targetY, 9, dt);
-    this.dome.rotation.y = this.rotY;
+    // Smooth follow
+    this.scrollAngle = damp(this.scrollAngle, this.targetScroll, 9, dt);
 
-    // Hover animation — card lifts slightly toward camera
+    // Update all slot positions + billboarding + wrapping
+    this._placeSlots();
+
+    // Per-card hover animation
     this.meshes.forEach(m => {
       const prev = m.userData.hoverAmt;
       m.userData.hoverAmt = damp(prev, m.userData.hoverTgt, 14, dt);
       if (Math.abs(m.userData.hoverAmt - prev) > 0.001) {
         m.material.uniforms.hover.value = m.userData.hoverAmt;
-        m.scale.setScalar(1 + m.userData.hoverAmt * 0.06);
+        m.scale.setScalar(1 + m.userData.hoverAmt * 0.055);
       }
     });
 
@@ -356,7 +407,7 @@ export class LivingDome {
       this.dragDist   = 0;
       this.lastX      = e.clientX;
       this.velSamples = [];
-      this.velY       = 0;
+      this.velScroll  = 0;
       dom.style.cursor = 'grabbing';
       dom.setPointerCapture?.(e.pointerId);
     };
@@ -366,12 +417,13 @@ export class LivingDome {
         const dx       = e.clientX - this.lastX;
         this.lastX     = e.clientX;
         this.dragDist += Math.abs(dx);
-        this.targetY  -= dx * ROT_SCALE;
+        // Drag right (dx > 0) → scroll backward (increase angle)
+        this.targetScroll += dx * ROT_SCALE;
         this.velSamples.push({ dx, t: performance.now() });
-        if (this.velSamples.length > 5) this.velSamples.shift();
+        if (this.velSamples.length > 6) this.velSamples.shift();
         return;
       }
-      // Hover
+      // Hover detection
       const hit = this._hitTest(e);
       if (hit !== this.hovered) {
         if (this.hovered) this.hovered.userData.hoverTgt = 0;
@@ -386,8 +438,8 @@ export class LivingDome {
       if (this.dragging && this.velSamples.length >= 2) {
         const a  = this.velSamples[0];
         const b  = this.velSamples[this.velSamples.length - 1];
-        const dt = Math.max(b.t - a.t, 1);
-        this.velY = -(b.dx / dt) * 13 * ROT_SCALE;
+        const elapsed = Math.max(b.t - a.t, 1);
+        this.velScroll = (b.dx / elapsed) * 14 * ROT_SCALE;
       }
       this.dragging = false;
       dom.style.cursor = this.hovered ? 'pointer' : 'grab';
@@ -399,13 +451,13 @@ export class LivingDome {
       if (hit) {
         const item  = hit.userData.item;
         const index = this.items.findIndex(i => i.id === item.id);
-        this.onSelect?.(item, index === -1 ? 0 : index);
+        this.onSelect?.(item, Math.max(0, index));
       }
     };
 
     this._onWheel = (e) => {
       e.preventDefault();
-      this.targetY -= e.deltaY * 0.0005;
+      this.targetScroll += e.deltaY * -0.0005;
     };
 
     dom.addEventListener('pointerdown',    this._onPD);
@@ -433,9 +485,5 @@ export class LivingDome {
     this.camera.aspect = W / H;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(W, H);
-  }
-
-  _isDark() {
-    return document.documentElement.getAttribute('data-theme') !== 'light';
   }
 }
