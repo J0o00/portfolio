@@ -13,13 +13,13 @@
 import * as THREE from 'three';
 
 // ── Sphere geometry ───────────────────────────────────────────
-const SPHERE_R    = 17;         // slightly larger sphere
-const CAM_DIST    = 20;         // camera further back
-const N_COLS      = 48;         // columns around 360° (7.5° apart)
-const N_ROWS      = 13;         // rows top to bottom
-const ROW_PHI_DEG = 6.0;        // degrees between rows
-const CARD_W      = 1.95;       // much smaller card width
-const CARD_H      = 1.45;       // much smaller card height
+const SPHERE_R    = 18;         // slightly larger sphere
+const CAM_DIST    = 21;         // camera further back
+const N_COLS      = 60;         // columns around 360° (6.0° apart)
+const N_ROWS      = 17;         // rows top to bottom
+const ROW_PHI_DEG = 4.5;        // degrees between rows
+const CARD_W      = 1.55;       // much smaller card width
+const CARD_H      = 1.15;       // much smaller card height
 const FOV         = 70;         // wide-angle for strong barrel distortion
 
 const COL_ANGLE   = (Math.PI * 2) / N_COLS;
@@ -234,7 +234,7 @@ export class LivingDome {
         hover:       { value: 0 },
         accentColor: { value: new THREE.Color('#E67E22') },
         cardBg:      { value: new THREE.Color(isDark ? '#111C30' : '#D5DCE8') },
-        cornerR:     { value: 0.12 },
+        cornerR:     { value: 0.30 },
       },
     });
     const mesh = new THREE.Mesh(geo, mat);
