@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Engineering Media Explorer — Engineering Intelligence</title>
+    <meta
+      name="description"
+      content="Browse every engineering media asset — projects, research, experience, awards, and certificates — in an interactive 3D dome gallery."
+    />
+
+    <link rel="stylesheet" href="/css/gallery.css" />
+    <link rel="stylesheet" href="/css/dome-gallery.css" />
+    <link rel="stylesheet" href="/css/viewer.css" />
+  </head>
+  <body>
+    <!--
+      Written as a self-contained Vite entry so it can run standalone
+      during development. To fold it into the existing site shell,
+      move everything inside <main data-gallery-page> into your
+      current page template (keeping your existing header/nav/footer
+      and theme toggle) and keep the module script below it.
+    -->
+
+    <a class="skip-link" href="#gallery-root">Skip to gallery</a>
+
+    <main data-gallery-page>
+      <header class="gallery-page__header">
+        <p class="gallery-page__eyebrow">Media Library</p>
+        <h1 class="gallery-page__title">Engineering Media Explorer</h1>
+        <p class="gallery-page__subtitle">
+          Every image from Projects, Research, and Experience, in one interactive space.
+        </p>
+      </header>
+
+      <section id="gallery-root" aria-label="Engineering media gallery"></section>
+    </main>
+
+    <script type="module">
+      import { mountGalleryExplorer } from '/js/gallery/GalleryLoader.js';
+      mountGalleryExplorer('#gallery-root');
+    </script>
+  </body>
+</html>

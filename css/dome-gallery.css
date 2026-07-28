@@ -1,0 +1,38 @@
+/**
+ * dome-gallery.css
+ * Styles for the 3D dome stage. The canvas itself is drawn by
+ * Three.js (rounded corners, hover glow, and glass sheen all live in
+ * DomeGallery.js's shader), so this file only covers the container's
+ * ambient backdrop, cursor affordances, and the visually-hidden
+ * accessible list that mirrors the dome for keyboard/screen-reader
+ * users.
+ */
+
+.gallery-explorer__view--dome {
+  position: relative;
+  background:
+    radial-gradient(120% 90% at 50% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+    radial-gradient(140% 100% at 50% 100%, color-mix(in srgb, var(--text-primary) 6%, transparent), transparent 70%),
+    var(--surface);
+}
+
+.gallery-explorer__view--dome canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.dome-gallery__a11y-list button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-explorer__view--dome canvas {
+    /* Momentum/inertia is already disabled inside DomeGallery.js when
+       prefers-reduced-motion is set; this removes any residual CSS
+       transition on the canvas element itself. */
+    transition: none !important;
+  }
+}

@@ -385,10 +385,7 @@
 <!-- ─── LIVING GALLERY ────────────────────────────────────── -->
 <section id="gallery" aria-labelledby="gallery-title">
 
-  <!-- Full-bleed glass background -->
-  <div class="gallery-section__bg" aria-hidden="true"></div>
-
-  <!-- Ambient floating particles -->
+  <!-- Ambient floating particles (very subtle) -->
   <canvas class="gallery-particles" data-gallery-particles aria-hidden="true"></canvas>
 
   <div class="container" style="position:relative; z-index:10;">
@@ -399,14 +396,23 @@
       <p>Every project image, research figure, and achievement — live from the Media Library.</p>
     </div>
 
-    <!-- Dome / Mobile gallery renders here -->
-    <div class="gallery-stage" data-gallery-stage>
-      <p class="gallery-status" data-gallery-status aria-live="polite">Initialising…</p>
-    </div>
-
-    <p class="gallery-hint" aria-hidden="true">Drag to explore &nbsp;↕</p>
-
   </div>
+
+  <!-- Dome stage breaks out of container to fill full width -->
+  <div class="gallery-dome-wrap">
+    <!-- Top/bottom fades so dome merges with page -->
+    <div class="gallery-fade-top" aria-hidden="true"></div>
+    <div class="gallery-fade-bot" aria-hidden="true"></div>
+
+    <div class="gallery-stage" data-gallery-stage>
+      <p class="gallery-status" data-gallery-status aria-live="polite">Loading media…</p>
+    </div>
+  </div>
+
+  <div class="container" style="position:relative; z-index:10;">
+    <p class="gallery-hint" aria-hidden="true">Drag to explore &nbsp;↔</p>
+  </div>
+
 </section>
 
 <!-- ─── EXPERIENCE ───────────────────────────────────────── -->

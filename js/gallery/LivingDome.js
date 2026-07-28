@@ -1,186 +1,168 @@
 /**
  * LivingDome.js
- * The core WebGL experience. A Three.js sphere (dome) of image cards
- * that rotates forever, responds to mouse drag with physics-based
- * inertia, and brings a clicked card smoothly forward while the rest
- * of the dome continues rotating in the background.
+ * Outward-convex barrel dome — camera sits OUTSIDE the cylinder,
+ * images curve toward the viewer at centre and wrap away at the edges.
  *
- * Design targets:
- *  - Apple Vision Pro feel: glass tiles, orange rim glow, constant motion
- *  - Never freezes — the dome keeps rotating even when an image is open
- *  - Mouse drag temporarily overrides auto-rotation; release → smooth resume
- *  - Click → camera eases toward the card (no DOM overlay, pure WebGL)
- *  - Inherits light/dark mode from CSS custom properties via getComputedStyle
+ * Key visual differences from the previous version:
+ *  - Camera is placed in front of the dome (z = -CAM_DIST)
+ *  - Cards are on the OUTSIDE of the cylinder, facing the camera
+ *  - Centre row/column is closest to viewer — edges taper away in 3D
+ *  - Cards fill only the front-facing arc (~260°)
+ *  - Background is fully transparent → integrates with page seamlessly
+ *  - Subtle scale+brightness fall-off toward edges (not a separate box)
  */
 
 import * as THREE from 'three';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const DOME_RADIUS   = 15;
-const CARD_H        = 3.0;
-const CARD_W        = CARD_H * (4 / 3);
-const AUTO_SPEED    = 0.00018; // radians per ms — slow, perpetual
-const INERTIA       = 0.93;    // momentum damping after drag release
-const ROT_SCALE     = 0.0035;  // drag px → rotation radians
-const FOV_DEFAULT   = 65;
-const FOV_MIN       = 40;
-const FOV_MAX       = 80;
-const CLICK_THRESH  = 5;       // px movement before classified as drag
+// ── Layout ────────────────────────────────────────────────────
+const ROWS        = 5;
+const RADIUS      = 11;        // cylinder radius
+const CAM_DIST    = 16;        // camera distance from cylinder axis
+const COL_ANGLE   = 0.20;      // radians between column centres
+const VISIBLE_ARC = Math.PI * 1.45;  // ~261° — only front hemisphere
+const ROW_HEIGHT  = 2.5;
+const CARD_W      = 2.7;
+const CARD_H      = 2.1;
 
-// ─── Shaders ─────────────────────────────────────────────────────────────────
+// ── Motion ────────────────────────────────────────────────────
+const AUTO_SPEED  = 0.000095;  // radians / ms — slow and cinematic
+const INERTIA     = 0.91;
+const ROT_SCALE   = 0.0038;
+const CLICK_THRESH = 6;        // px of drag before treating as scroll
+
+// ── Camera / FOV ─────────────────────────────────────────────
+const FOV = 68;
+
+// ─────────────────────────────────────────────────────────────
+// GLSL shaders
+// ─────────────────────────────────────────────────────────────
 const VERT = `
   varying vec2 vUv;
-  varying vec3 vNormal;
   void main() {
-    vUv    = uv;
-    vNormal = normal;
+    vUv = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
-// Each card has: image texture, hover rim glow (orange), glass sheen, rounded corners.
 const FRAG = `
   precision highp float;
+
   uniform sampler2D map;
-  uniform float     hasTexture;
-  uniform float     hover;          // 0..1
-  uniform float     selected;       // 0..1 — card is the open one
-  uniform float     corner;
-  uniform vec3      rimColor;
-  uniform vec3      placeholder;
+  uniform float hasTexture;
+  uniform float hover;
+  uniform float falloff;    // 0 (centre) → 1 (edge): dims card naturally
+  uniform vec3  accentColor;
+  uniform vec3  cardBg;
+  uniform float cornerR;
+
   varying vec2 vUv;
 
-  float roundRect(vec2 p, vec2 half, float r) {
-    vec2 q = abs(p) - half + r;
-    return length(max(q,0.0)) + min(max(q.x,q.y),0.0) - r;
+  // Signed-distance for a rounded rectangle; returns neg inside, pos outside
+  float sdRoundRect(vec2 uv, float r) {
+    vec2 p = (uv - 0.5) * 2.0;
+    vec2 q = abs(p) - (1.0 - r);
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
   }
 
   void main() {
-    vec2  c    = (vUv - 0.5) * 2.0;
-    float dist = roundRect(c, vec2(1.0), corner);
-    float alpha = 1.0 - smoothstep(-0.02, 0.0, dist);
-    if (alpha < 0.002) discard;
+    float d    = sdRoundRect(vUv, cornerR);
+    float mask = 1.0 - smoothstep(-0.02, 0.02, d);
+    if (mask < 0.005) discard;
 
     // Base colour
-    vec3 col = hasTexture > 0.5 ? texture2D(map, vUv).rgb : placeholder;
+    vec3 col = hasTexture > 0.5 ? texture2D(map, vUv).rgb : cardBg;
 
-    // Glass sheen — diagonal highlight near top
-    float sheen = pow(clamp(1.0 - abs(vUv.y - 0.88)*6.0, 0.0, 1.0), 2.0) * 0.22;
+    // Subtle top-edge sheen (glass feel)
+    float sheen = smoothstep(0.0, 0.18, vUv.y - 0.82) * 0.10;
     col += sheen;
 
-    // Thin white border
-    float border = smoothstep(0.0, 0.03, -dist) * 0.15;
+    // Thin bright border
+    float border = smoothstep(0.0, 0.035, -d) * 0.12;
     col = mix(col, vec3(1.0), border);
 
-    // Orange rim glow on hover
-    float rimW   = max(hover, selected);
-    float rim    = smoothstep(-0.22, 0.0, dist) * rimW;
-    col = mix(col, rimColor, rim * 0.55);
-    col *= 1.0 + rimW * 0.08;
+    // Orange accent rim on hover
+    float rimZone = smoothstep(-0.20, 0.0, d);
+    col = mix(col, accentColor, rimZone * hover * 0.45);
+    col *= 1.0 + hover * 0.07;
 
-    // When selected: brighten slightly more
-    col *= 1.0 + selected * 0.12;
+    // Edge fall-off: cards at cylinder edges fade/dim naturally
+    col *= 1.0 - falloff * 0.55;
+    float alpha = mask * (1.0 - falloff * 0.40);
 
-    gl_FragColor = vec4(col, alpha * (0.9 + hover * 0.1));
+    gl_FragColor = vec4(col, alpha);
   }
 `;
 
-// ─── Utility ─────────────────────────────────────────────────────────────────
-function fibSphere(n, r) {
-  const pts = [];
-  const phi = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < n; i++) {
-    const y   = 1 - (i / Math.max(n - 1, 1)) * 2;
-    const rad = Math.sqrt(Math.max(0, 1 - y * y));
-    const th  = phi * i;
-    pts.push(new THREE.Vector3(Math.cos(th) * rad * r, y * r, Math.sin(th) * rad * r));
-  }
-  return pts;
-}
-
+// ── Helpers ───────────────────────────────────────────────────
 function lerp(a, b, t) { return a + (b - a) * t; }
 function damp(a, b, lam, dt) { return lerp(a, b, 1 - Math.exp(-lam * dt)); }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-// ─── Main Class ───────────────────────────────────────────────────────────────
+// ── Main Class ────────────────────────────────────────────────
 export class LivingDome {
   constructor(container, { onSelect } = {}) {
-    this.container = container;
-    this.onSelect  = onSelect;
-
-    // Items + GPU
-    this.items   = [];
-    this.meshes  = [];
-    this.byId    = new Map();
-    this.texCache = new Map();
+    this.container  = container;
+    this.onSelect   = onSelect;
+    this.items      = [];
+    this.meshes     = [];
+    this.loader     = new THREE.TextureLoader();
+    this.texCache   = new Map();
     this.texPending = new Map();
-    this.loader  = new THREE.TextureLoader();
 
-    // Rotation state
-    this.rotY   = 0;
-    this.rotX   = -0.12;
-    this.velY   = 0;
-    this.velX   = 0;
+    // Rotation
+    this.rotY    = 0;
     this.targetY = 0;
-    this.targetX = -0.12;
-    this.autoT   = 0;   // cumulative auto-rotation (ms)
+    this.velY    = 0;
 
-    // Pointer state
-    this.ptrs      = new Map();
-    this.dragging  = false;
-    this.dragDist  = 0;
-    this.lastPt    = {x:0, y:0};
+    // Pointer
+    this.dragging   = false;
+    this.dragDist   = 0;
+    this.lastX      = 0;
     this.velSamples = [];
-    this.pinchD0   = null;
-    this.pinchFov0 = FOV_DEFAULT;
-
-    // FOV / camera
-    this.fov       = FOV_DEFAULT;
-    this.targetFov = FOV_DEFAULT;
-
-    // Selection
-    this.selectedId = null;
-    this.camOrigPos = new THREE.Vector3(0,0,0.01);
-    this.camTargetPos = new THREE.Vector3(0,0,0.01);
 
     // Hover
-    this.hovered = null;
-    this.ndc     = new THREE.Vector2();
-    this.raycaster = new THREE.Raycaster();
+    this.hovered    = null;
+    this.ndc        = new THREE.Vector2();
+    this.raycaster  = new THREE.Raycaster();
 
     // RAF
-    this._raf = null;
-    this._last = null;
+    this._raf      = null;
+    this._last     = null;
     this.destroyed = false;
 
     this._init();
   }
 
-  // ── Boot ──────────────────────────────────────────────────────
+  // ── Bootstrap ─────────────────────────────────────────────
   _init() {
-    const {clientWidth: W, clientHeight: H} = this.container;
+    const { clientWidth: W, clientHeight: H } = this.container;
 
     this.scene  = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(this.fov, Math.max(W,1)/Math.max(H,1), 0.1, 200);
-    this.camera.position.copy(this.camOrigPos);
 
-    this.renderer = new THREE.WebGLRenderer({antialias:true, alpha:true, powerPreference:'high-performance'});
+    // Camera outside the dome, looking at the front face
+    this.camera = new THREE.PerspectiveCamera(FOV, Math.max(W, 1) / Math.max(H, 1), 0.1, 200);
+    this.camera.position.set(0, 0, -CAM_DIST);
+    this.camera.lookAt(0, 0, 0);
+
+    // Transparent renderer — integrates with page background
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha:     true,
+      powerPreference: 'high-performance',
+    });
+    this.renderer.setClearColor(0x000000, 0); // fully transparent background
     this.renderer.setSize(W, H);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const dom = this.renderer.domElement;
     dom.style.touchAction = 'none';
-    dom.style.cursor = 'grab';
+    dom.style.cursor      = 'grab';
+    dom.style.display     = 'block';
     dom.setAttribute('aria-hidden', 'true');
     this.container.appendChild(dom);
 
-    // Subtle ambient + point light for depth (barely visible but adds 3D feel)
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-    const pt = new THREE.PointLight(0xffa040, 0.8, 60);
-    pt.position.set(0,10,5);
-    this.scene.add(pt);
-
+    // Group that we rotate (the whole dome)
     this.dome = new THREE.Group();
     this.scene.add(this.dome);
 
@@ -188,67 +170,93 @@ export class LivingDome {
     this._resObs.observe(this.container);
 
     this._bindEvents();
-
     this._animate = this._animate.bind(this);
     this._raf = requestAnimationFrame(this._animate);
   }
 
-  // ── Public API ────────────────────────────────────────────────
+  // ── Public API ────────────────────────────────────────────
   setItems(items) {
     this._clearDome();
     this.items = items;
-    const positions = fibSphere(items.length, DOME_RADIUS);
-    items.forEach((item, i) => {
-      const mesh = this._makeCard(item, positions[i]);
-      this.dome.add(mesh);
-      this.meshes.push(mesh);
-      this.byId.set(item.id, mesh);
-    });
+    if (!items.length) return;
+
+    const totalCols = Math.ceil(VISIBLE_ARC / COL_ANGLE) + 1;
+    const startAngle = -VISIBLE_ARC / 2;   // centre arc on front face
+
+    let idx = 0;
+    for (let col = 0; col < totalCols; col++) {
+      const angle = startAngle + col * COL_ANGLE;
+
+      // How far off-centre? 0 = front, 1 = edge
+      const normalised = Math.abs(angle) / (VISIBLE_ARC / 2);
+      const falloff    = Math.pow(normalised, 1.4);
+
+      for (let row = 0; row < ROWS; row++) {
+        const item = items[idx % items.length];
+        idx++;
+
+        // Outward convex: card on OUTSIDE of cylinder facing -Z (camera direction)
+        const x = Math.sin(angle) * RADIUS;
+        const z = -Math.cos(angle) * RADIUS;
+        // Brick offset on alternate columns
+        const yOffset = (col % 2 === 0) ? 0 : ROW_HEIGHT * 0.5;
+        const y = (row - (ROWS - 1) / 2) * ROW_HEIGHT + yOffset;
+
+        const mesh = this._makeCard(item, falloff);
+        mesh.position.set(x, y, z);
+        // Rotate card to face outward (away from cylinder axis, toward camera)
+        mesh.rotation.y = angle;
+
+        this.dome.add(mesh);
+        this.meshes.push(mesh);
+      }
+    }
+
     this._lazyLoad();
   }
 
   pause()  { if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null; } }
-  resume() { if (!this._raf && !this.destroyed) { this._last = null; this._raf = requestAnimationFrame(this._animate); } }
-  refreshSize() { this._onResize(); }
+  resume() {
+    if (!this._raf && !this.destroyed) {
+      this._last = null;
+      this._raf  = requestAnimationFrame(this._animate);
+    }
+  }
 
   destroy() {
     this.destroyed = true;
     this.pause();
     this._resObs?.disconnect();
-    const dom = this.renderer.domElement;
-    dom.parentElement?.removeChild(dom);
-    this._clearDome();
     this._unbindEvents();
+    this._clearDome();
+    const dom = this.renderer.domElement;
+    dom?.parentElement?.removeChild(dom);
     this.renderer.dispose();
   }
 
-  // ── Card Factory ──────────────────────────────────────────────
-  _makeCard(item, pos) {
-    const geo = new THREE.PlaneGeometry(CARD_W, CARD_H, 1, 1);
+  // ── Card Factory ──────────────────────────────────────────
+  _makeCard(item, falloff) {
+    const geo = new THREE.PlaneGeometry(CARD_W, CARD_H);
+    const isDark = this._isDark();
     const mat = new THREE.ShaderMaterial({
       vertexShader:   VERT,
       fragmentShader: FRAG,
       transparent:    true,
-      side:           THREE.DoubleSide,
+      side:           THREE.FrontSide,
       uniforms: {
         map:         { value: null },
         hasTexture:  { value: 0 },
         hover:       { value: 0 },
-        selected:    { value: 0 },
-        corner:      { value: 0.16 },
-        rimColor:    { value: new THREE.Color(this._accentColor()) },
-        placeholder: { value: new THREE.Color(this._placeholderColor()) },
+        falloff:     { value: falloff },
+        accentColor: { value: new THREE.Color('#E67E22') },
+        cardBg:      { value: new THREE.Color(isDark ? '#111C30' : '#E2E8F0') },
+        cornerR:     { value: 0.13 },
       },
     });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.copy(pos);
-    mesh.lookAt(0, 0, 0);
-    mesh.rotateY(Math.PI);
-    mesh.userData.item      = item;
-    mesh.userData.hoverAmt  = 0;
-    mesh.userData.hoverTgt  = 0;
-    mesh.userData.selAmt    = 0;
-    mesh.userData.selTgt    = 0;
+    const mesh        = new THREE.Mesh(geo, mat);
+    mesh.userData.item     = item;
+    mesh.userData.hoverAmt = 0;
+    mesh.userData.hoverTgt = 0;
     return mesh;
   }
 
@@ -259,265 +267,175 @@ export class LivingDome {
       m.material.dispose();
     });
     this.meshes = [];
-    this.byId.clear();
     this.texCache.forEach(t => t.dispose());
     this.texCache.clear();
     this.texPending.clear();
-    this.selectedId = null;
-    this.hovered    = null;
+    this.hovered = null;
   }
 
-  // ── Texture Lazy-Load ─────────────────────────────────────────
+  // ── Lazy Texture Loading ──────────────────────────────────
   _lazyLoad() {
-    this.dome.updateMatrixWorld(true);
-    const fwd = new THREE.Vector3();
-    this.camera.getWorldDirection(fwd);
-    const camPos = this.camera.getWorldPosition(new THREE.Vector3());
-
+    const seen = new Set();
     this.meshes.forEach(mesh => {
-      if (mesh.material.uniforms.hasTexture.value === 1) return;
-      const toMesh = mesh.getWorldPosition(new THREE.Vector3()).sub(camPos).normalize();
-      if (toMesh.dot(fwd) <= 0.2) return;
-
-      const url = mesh.userData.item.url;
-      if (!url || this.texPending.has(url)) return;
-      this.texPending.set(url, true);
+      const url = mesh.userData.item?.url;
+      if (!url || seen.has(url)) return;
+      seen.add(url);
 
       if (this.texCache.has(url)) {
-        mesh.material.uniforms.map.value        = this.texCache.get(url);
-        mesh.material.uniforms.hasTexture.value = 1;
+        this._applyTex(url, this.texCache.get(url));
         return;
       }
+      if (this.texPending.has(url)) return;
+      this.texPending.set(url, true);
+
       this.loader.load(url, (tex) => {
         if (this.destroyed) return;
         tex.colorSpace = THREE.SRGBColorSpace;
-        tex.anisotropy = 4;
+        tex.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
         this.texCache.set(url, tex);
-        mesh.material.uniforms.map.value        = tex;
-        mesh.material.uniforms.hasTexture.value = 1;
+        this._applyTex(url, tex);
       }, undefined, () => {});
     });
   }
 
-  // ── Raycasting ────────────────────────────────────────────────
-  _raycast() {
+  _applyTex(url, tex) {
+    this.meshes.forEach(mesh => {
+      if (mesh.userData.item?.url === url) {
+        mesh.material.uniforms.map.value        = tex;
+        mesh.material.uniforms.hasTexture.value = 1;
+      }
+    });
+  }
+
+  // ── Raycasting ────────────────────────────────────────────
+  _hitTest(e) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.ndc.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+    this.ndc.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.ndc, this.camera);
     const hits = this.raycaster.intersectObjects(this.meshes);
     return hits.length ? hits[0].object : null;
   }
 
-  _updateHover(e) {
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    this.ndc.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
-    this.ndc.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
-    const hit = this._raycast();
-    if (hit === this.hovered) return;
-    if (this.hovered) this.hovered.userData.hoverTgt = 0;
-    this.hovered = hit;
-    if (hit) hit.userData.hoverTgt = 1;
-    const dom = this.renderer.domElement;
-    dom.style.cursor = hit ? 'pointer' : (this.dragging ? 'grabbing' : 'grab');
-  }
-
-  // ── Selection ─────────────────────────────────────────────────
-  _openCard(mesh) {
-    const item = mesh.userData.item;
-    if (this.selectedId === item.id) return; // already open
-    
-    // Clear previous selection
-    if (this.selectedId) {
-      const prev = this.byId.get(this.selectedId);
-      if (prev) prev.userData.selTgt = 0;
-    }
-    this.selectedId = item.id;
-    mesh.userData.selTgt = 1;
-
-    // Camera glide toward card
-    const dir = mesh.position.clone().normalize();
-    this.camTargetPos.copy(dir.multiplyScalar(DOME_RADIUS - 6));
-
-    this.onSelect?.(item);
-  }
-
-  closeSelection() {
-    if (!this.selectedId) return;
-    const mesh = this.byId.get(this.selectedId);
-    if (mesh) mesh.userData.selTgt = 0;
-    this.selectedId = null;
-    this.camTargetPos.copy(this.camOrigPos);
-  }
-
-  // ── Animation Loop ────────────────────────────────────────────
+  // ── Animation Loop ────────────────────────────────────────
   _animate(now) {
     if (this.destroyed) return;
     this._raf = requestAnimationFrame(this._animate);
 
-    const dt  = Math.min((now - (this._last ?? now)) / 1000, 0.1);
+    const dt = Math.min((now - (this._last ?? now)) / 1000, 0.1);
     this._last = now;
 
-    // Auto-rotation: constant drift unless dragging
     if (!this.dragging) {
-      this.targetY += AUTO_SPEED * (now - (this._autoLast ?? now));
-      this._autoLast = now;
-
-      // Apply inertia velocity
+      this.targetY += AUTO_SPEED * (dt * 1000);
       this.targetY += this.velY;
-      this.targetX  = clamp(this.targetX + this.velX, -Math.PI/2 + 0.1, Math.PI/2 - 0.1);
-      this.velY *= INERTIA;
-      this.velX *= INERTIA;
-    } else {
-      this._autoLast = now; // keep synced so no jump on release
+      this.velY    *= INERTIA;
     }
 
-    // Smooth rotation
-    const rotLambda = 6;
-    this.rotY = damp(this.rotY, this.targetY, rotLambda, dt);
-    this.rotX = damp(this.rotX, this.targetX, rotLambda, dt);
+    this.rotY      = damp(this.rotY, this.targetY, 9, dt);
     this.dome.rotation.y = this.rotY;
-    this.dome.rotation.x = this.rotX;
 
-    // FOV
-    this.fov = damp(this.fov, this.targetFov, 10, dt);
-    if (Math.abs(this.fov - this.camera.fov) > 0.01) {
-      this.camera.fov = this.fov;
-      this.camera.updateProjectionMatrix();
-    }
-
-    // Camera position (selection glide)
-    this.camera.position.lerp(this.camTargetPos, 0.06);
-
-    // Per-card hover / selection animation
+    // Hover animation — card lifts slightly toward camera
     this.meshes.forEach(m => {
-      m.userData.hoverAmt = damp(m.userData.hoverAmt, m.userData.hoverTgt, 10, dt);
-      m.userData.selAmt   = damp(m.userData.selAmt,   m.userData.selTgt,   8, dt);
-      m.material.uniforms.hover.value    = m.userData.hoverAmt;
-      m.material.uniforms.selected.value = m.userData.selAmt;
-
-      // Hover: card lifts slightly toward camera
-      const liftDir = m.position.clone().normalize().negate();
-      const liftAmt = m.userData.hoverAmt * 0.4;
-      m.position.addScaledVector(liftDir, liftAmt * dt * 10);  // additive damped nudge
-      m.scale.setScalar(1 + m.userData.hoverAmt * 0.07 + m.userData.selAmt * 0.14);
+      const prev = m.userData.hoverAmt;
+      m.userData.hoverAmt = damp(prev, m.userData.hoverTgt, 14, dt);
+      if (Math.abs(m.userData.hoverAmt - prev) > 0.001) {
+        m.material.uniforms.hover.value = m.userData.hoverAmt;
+        m.scale.setScalar(1 + m.userData.hoverAmt * 0.06);
+      }
     });
-
-    // Lazy-load on every Nth frame
-    this._lazyAcc = (this._lazyAcc || 0) + dt;
-    if (this._lazyAcc > 0.3) { this._lazyAcc = 0; this._lazyLoad(); }
 
     this.renderer.render(this.scene, this.camera);
   }
 
-  // ── Events ────────────────────────────────────────────────────
+  // ── Events ────────────────────────────────────────────────
   _bindEvents() {
     const dom = this.renderer.domElement;
 
     this._onPD = (e) => {
-      this.ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+      this.dragging   = true;
+      this.dragDist   = 0;
+      this.lastX      = e.clientX;
+      this.velSamples = [];
+      this.velY       = 0;
+      dom.style.cursor = 'grabbing';
       dom.setPointerCapture?.(e.pointerId);
-      if (this.ptrs.size === 1) {
-        this.dragging   = true;
-        this.dragDist   = 0;
-        this.lastPt     = {x: e.clientX, y: e.clientY};
-        this.velSamples = [];
-        this.velY = 0; this.velX = 0;
-        dom.style.cursor = 'grabbing';
-      } else if (this.ptrs.size === 2) {
-        const [a,b] = [...this.ptrs.values()];
-        this.pinchD0 = Math.hypot(a.x-b.x, a.y-b.y);
-        this.pinchFov0 = this.targetFov;
-      }
     };
 
     this._onPM = (e) => {
-      if (!this.ptrs.has(e.pointerId)) { this._updateHover(e); return; }
-      this.ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
-      if (this.ptrs.size === 2) {
-        const [a,b] = [...this.ptrs.values()];
-        const d = Math.hypot(a.x-b.x, a.y-b.y);
-        if (this.pinchD0) this.targetFov = clamp(this.pinchFov0*(this.pinchD0/d), FOV_MIN, FOV_MAX);
+      if (this.dragging) {
+        const dx       = e.clientX - this.lastX;
+        this.lastX     = e.clientX;
+        this.dragDist += Math.abs(dx);
+        this.targetY  -= dx * ROT_SCALE;
+        this.velSamples.push({ dx, t: performance.now() });
+        if (this.velSamples.length > 5) this.velSamples.shift();
         return;
       }
-      if (!this.dragging) return;
-      const dx = e.clientX - this.lastPt.x;
-      const dy = e.clientY - this.lastPt.y;
-      this.lastPt = {x: e.clientX, y: e.clientY};
-      this.dragDist += Math.abs(dx) + Math.abs(dy);
-      this.targetY += dx * ROT_SCALE;
-      this.targetX  = clamp(this.targetX - dy * ROT_SCALE, -Math.PI/2+0.1, Math.PI/2-0.1);
-      this.velSamples.push({dx, dy, t: now});
-      if (this.velSamples.length > 5) this.velSamples.shift();
+      // Hover
+      const hit = this._hitTest(e);
+      if (hit !== this.hovered) {
+        if (this.hovered) this.hovered.userData.hoverTgt = 0;
+        this.hovered = hit;
+        if (hit) hit.userData.hoverTgt = 1;
+        dom.style.cursor = hit ? 'pointer' : 'grab';
+      }
     };
 
     this._onPU = (e) => {
-      this.ptrs.delete(e.pointerId);
       dom.releasePointerCapture?.(e.pointerId);
-      if (this.ptrs.size < 2) this.pinchD0 = null;
-      if (this.ptrs.size === 0) {
-        if (this.dragging && this.velSamples.length >= 2) {
-          const a = this.velSamples[0], b = this.velSamples[this.velSamples.length-1];
-          const dt2 = Math.max(b.t - a.t, 1);
-          this.velY =  (b.dx / dt2) * 14 * ROT_SCALE;
-          this.velX = -(b.dy / dt2) * 14 * ROT_SCALE;
-        }
-        this.dragging = false;
-        dom.style.cursor = 'grab';
+      if (this.dragging && this.velSamples.length >= 2) {
+        const a  = this.velSamples[0];
+        const b  = this.velSamples[this.velSamples.length - 1];
+        const dt = Math.max(b.t - a.t, 1);
+        this.velY = -(b.dx / dt) * 13 * ROT_SCALE;
       }
+      this.dragging = false;
+      dom.style.cursor = this.hovered ? 'pointer' : 'grab';
     };
 
-    this._onClick = () => {
+    this._onClick = (e) => {
       if (this.dragDist > CLICK_THRESH) { this.dragDist = 0; return; }
-      const hit = this._raycast();
-      if (hit) this._openCard(hit);
-      else this.closeSelection();
+      const hit = this._hitTest(e);
+      if (hit) {
+        const item  = hit.userData.item;
+        const index = this.items.findIndex(i => i.id === item.id);
+        this.onSelect?.(item, index === -1 ? 0 : index);
+      }
     };
 
     this._onWheel = (e) => {
       e.preventDefault();
-      this.targetFov = clamp(this.targetFov + e.deltaY * 0.025, FOV_MIN, FOV_MAX);
+      this.targetY -= e.deltaY * 0.0005;
     };
 
-    this._onTM = (e) => e.preventDefault();
-
-    dom.addEventListener('pointerdown',  this._onPD);
-    window.addEventListener('pointermove',  this._onPM);
-    window.addEventListener('pointerup',    this._onPU);
-    window.addEventListener('pointercancel',this._onPU);
-    dom.addEventListener('wheel',   this._onWheel, {passive:false});
+    dom.addEventListener('pointerdown',    this._onPD);
+    window.addEventListener('pointermove',    this._onPM);
+    window.addEventListener('pointerup',      this._onPU);
+    window.addEventListener('pointercancel',  this._onPU);
+    dom.addEventListener('wheel',   this._onWheel, { passive: false });
     dom.addEventListener('click',   this._onClick);
-    dom.addEventListener('touchmove', this._onTM, {passive:false});
   }
 
   _unbindEvents() {
     const dom = this.renderer.domElement;
     if (!dom) return;
-    dom.removeEventListener('pointerdown',  this._onPD);
-    window.removeEventListener('pointermove',  this._onPM);
-    window.removeEventListener('pointerup',    this._onPU);
-    window.removeEventListener('pointercancel',this._onPU);
-    dom.removeEventListener('wheel',   this._onWheel);
-    dom.removeEventListener('click',   this._onClick);
-    dom.removeEventListener('touchmove', this._onTM);
+    dom.removeEventListener('pointerdown',   this._onPD);
+    window.removeEventListener('pointermove',   this._onPM);
+    window.removeEventListener('pointerup',     this._onPU);
+    window.removeEventListener('pointercancel', this._onPU);
+    dom.removeEventListener('wheel',  this._onWheel);
+    dom.removeEventListener('click',  this._onClick);
   }
 
   _onResize() {
-    const {clientWidth: W, clientHeight: H} = this.container;
+    const { clientWidth: W, clientHeight: H } = this.container;
     if (!W || !H) return;
     this.camera.aspect = W / H;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(W, H);
   }
 
-  // ── Theme Helpers ─────────────────────────────────────────────
-  _accentColor() {
-    // Read the CSS variable so it matches whatever the current theme is
-    const v = getComputedStyle(document.documentElement)
-                .getPropertyValue('--gallery-glow').trim();
-    return v || '#E67E22';
-  }
-
-  _placeholderColor() {
-    const v = getComputedStyle(document.documentElement)
-                .getPropertyValue('--gallery-placeholder').trim();
-    return v || '#1a2640';
+  _isDark() {
+    return document.documentElement.getAttribute('data-theme') !== 'light';
   }
 }

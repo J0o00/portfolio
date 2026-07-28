@@ -1,12 +1,7 @@
 /**
  * GalleryService.js
  * Data access layer for the Living Gallery. Fetches the media_library
- * from Supabase (the same table Quantum Control uses) and normalizes
- * every row into a flat, UI-ready shape.
- *
- * Nothing is hardcoded. Nothing is uploaded separately.
- * If a project, research item, or experience record gets a new image
- * in Quantum Control, it automatically appears here.
+ * from Supabase and normalizes every row into a flat, UI-ready shape.
  */
 
 import { supabase } from '../../src/lib/supabase.js';
@@ -14,8 +9,7 @@ import { supabase } from '../../src/lib/supabase.js';
 const TABLE = 'media_library';
 
 const COLUMNS = [
-  'id', 'url', 'title', 'description', 'alt_text', 'category', 'tags',
-  'project_slug', 'research_slug', 'experience_slug', 'created_at',
+  'id', 'filename', 'bucket', 'storage_path', 'alt_text', 'tags', 'created_at'
 ].join(', ');
 
 /**
@@ -35,17 +29,19 @@ export async function fetchMediaLibrary() {
 }
 
 function normalizeItem(row) {
+  // Generate public URL using Supabase Storage API
+  const { data: { publicUrl } } = supabase.storage
+    .from(row.bucket)
+    .getPublicUrl(row.storage_path);
+
   return {
     id: row.id,
-    url: row.url,
-    title: (row.title || '').trim() || 'Untitled',
-    description: row.description ?? '',
-    altText: row.alt_text || row.title || 'Engineering media',
-    category: row.category || 'Uncategorized',
+    url: publicUrl,
+    title: (row.filename || '').trim() || 'Untitled',
+    description: '',
+    altText: row.alt_text || row.filename || 'Engineering media',
+    category: 'Media',
     tags: normalizeTags(row.tags),
-    projectSlug: row.project_slug || null,
-    researchSlug: row.research_slug || null,
-    experienceSlug: row.experience_slug || null,
     createdAt: row.created_at,
   };
 }

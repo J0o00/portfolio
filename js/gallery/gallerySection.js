@@ -73,9 +73,8 @@ export async function initLivingGallery(sectionEl) {
 
     if (useWebGL) {
       dome = new LivingDome(stageEl, {
-        onSelect: (item) => {
-          const index = items.findIndex(i => i.id === item.id);
-          viewer.open(items, index === -1 ? 0 : index);
+        onSelect: (item, index) => {
+          viewer.open(items, index ?? 0);
           // Dome keeps rotating — we do NOT pause it
         }
       });

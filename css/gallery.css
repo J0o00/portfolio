@@ -1,63 +1,32 @@
 /* ============================================================
    LIVING GALLERY — gallery.css
-   Engineering Media Showcase embedded in index.html
-   ============================================================
+   Seamlessly integrated into the page — no box, no hard edges.
+   The dome simply emerges from the section's natural background.
 
-   Design tokens used (must be set in :root / [data-theme]):
-     --gallery-bg          section background
-     --gallery-glass       glass card surface
-     --gallery-glow        orange engineering accent (#E67E22)
-     --gallery-particle    ambient particle colour
-     --gallery-placeholder card placeholder colour before texture loads
-     --gallery-text        label text
-
-   All non-gallery tokens come from style.css (:root / data-theme).
+   Reads site tokens:
+     --page-bg        page base colour (dark #08111F / light #F8FAFC)
+     --text-heading   headings
+     --text-muted     subtext
+     --glass-border   subtle borders
+     --ease-out       motion easing
    ============================================================ */
 
-/* ── 1. SECTION CHROME ──────────────────────────────────────── */
+/* ── 1. SECTION ─────────────────────────────────────────────── */
 #gallery {
   position: relative;
   width: 100%;
-  overflow: hidden;
-  /* Let the section breathe but keep stage height stable */
-  padding-top: var(--space-xl);
+  padding-top: var(--space-2xl);
   padding-bottom: var(--space-xl);
+  /* No background — inherits the page */
+  overflow: hidden;
 }
 
-/* Full-bleed section backdrop — glass layer under the dome */
-.gallery-section__bg {
-  position: absolute;
-  inset: 0;
-  background: var(--gallery-bg);
-  z-index: 0;
-}
-
-/* Vignette edges — makes the dome feel contained */
-.gallery-section__bg::before,
-.gallery-section__bg::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 14%;
-  pointer-events: none;
-  z-index: 2;
-}
-.gallery-section__bg::before {
-  top: 0;
-  background: linear-gradient(to bottom, var(--gallery-bg), transparent);
-}
-.gallery-section__bg::after {
-  bottom: 0;
-  background: linear-gradient(to top, var(--gallery-bg), transparent);
-}
-
-/* ── 2. HEADER ROW ──────────────────────────────────────────── */
+/* ── 2. HEADER ───────────────────────────────────────────────── */
 .gallery-section__header {
+  text-align: center;
+  margin-bottom: 2.5rem;
   position: relative;
   z-index: 10;
-  text-align: center;
-  margin-bottom: 2rem;
 }
 .gallery-section__header .section-label {
   display: block;
@@ -69,11 +38,11 @@
 .gallery-section__header p {
   color: var(--text-muted);
   font-size: 0.95rem;
-  max-width: 440px;
+  max-width: 420px;
   margin: 0 auto;
 }
 
-/* ── 3. AMBIENT PARTICLES CANVAS ────────────────────────────── */
+/* ── 3. AMBIENT PARTICLES ────────────────────────────────────── */
 .gallery-particles {
   position: absolute;
   inset: 0;
@@ -81,50 +50,77 @@
   height: 100%;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
-/* ── 4. DOME STAGE ──────────────────────────────────────────── */
-.gallery-stage {
+/* ── 4. DOME WRAPPER — handles the edge fades ────────────────── */
+/*
+  This wrapper is the secret: it has no visible border/background itself,
+  but its ::before/::after pseudo-elements fade the canvas edges into the
+  page background — making the dome look painted directly onto the page,
+  not boxed in a container.
+*/
+.gallery-dome-wrap {
   position: relative;
   z-index: 5;
-  width: 100%;
-  height: 72vh;
-  min-height: 420px;
-  max-height: 700px;
-  border-radius: 20px;
-  overflow: hidden;
-
-  /* Glass border — same style as the rest of the site */
-  background: var(--gallery-glass);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    0 0 0 1px rgba(230,126,34, 0.08),
-    0 8px 40px rgba(0,0,0, 0.35),
-    inset 0 1px 0 rgba(255,255,255,0.07);
-
-  /* Fade in from the bottom on section entry */
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
 }
 
-/* Inner orange edge glow pulse — always on, very subtle */
-.gallery-stage::before {
+/* Left + right edge fades — use the site's actual page background colour
+   so they match perfectly in both dark and light modes */
+.gallery-dome-wrap::before,
+.gallery-dome-wrap::after {
   content: '';
   position: absolute;
-  inset: -1px;
-  border-radius: 21px;
+  top: 0;
+  bottom: 0;
+  width: 14%;
   pointer-events: none;
   z-index: 20;
-  background: transparent;
-  box-shadow: inset 0 0 40px rgba(230,126,34, 0.06);
-  animation: gallery-pulse 6s ease-in-out infinite;
+}
+.gallery-dome-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--page-bg) 0%, transparent 100%);
+}
+.gallery-dome-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--page-bg) 0%, transparent 100%);
 }
 
-@keyframes gallery-pulse {
-  0%, 100% { box-shadow: inset 0 0 40px rgba(230,126,34, 0.04); }
-  50%       { box-shadow: inset 0 0 70px rgba(230,126,34, 0.12); }
+/* Top and bottom fades too — dome merges with page above and below */
+.gallery-dome-wrap .gallery-fade-top,
+.gallery-dome-wrap .gallery-fade-bot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18%;
+  pointer-events: none;
+  z-index: 20;
+}
+.gallery-dome-wrap .gallery-fade-top {
+  top: 0;
+  background: linear-gradient(to bottom, var(--page-bg) 0%, transparent 100%);
+}
+.gallery-dome-wrap .gallery-fade-bot {
+  bottom: 0;
+  background: linear-gradient(to top, var(--page-bg) 0%, transparent 100%);
+}
+
+/* ── 5. DOME STAGE (the canvas host) ─────────────────────────── */
+.gallery-stage {
+  position: relative;
+  width: 100%;
+  height: 65vh;
+  min-height: 420px;
+  max-height: 660px;
+
+  /* NO background, NO border, NO border-radius, NO shadow */
+  /* The Three.js canvas is transparent — it merges with the page */
+  background: transparent;
+
+  /* Fade in on scroll into view */
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
 }
 
 /* Three.js canvas fills the stage */
@@ -134,13 +130,13 @@
   height: 100% !important;
 }
 
-/* ── 5. SECTION VISIBLE STATE ───────────────────────────────── */
+/* ── 6. SECTION VISIBLE STATE ────────────────────────────────── */
 .gallery-section--visible .gallery-stage {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* ── 6. STATUS MESSAGE ──────────────────────────────────────── */
+/* ── 7. STATUS / LOADING TEXT ────────────────────────────────── */
 .gallery-status {
   position: absolute;
   inset: 0;
@@ -148,53 +144,67 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   z-index: 10;
   pointer-events: none;
+  margin: 0;
 }
 
-/* ── 7. MOBILE GALLERY (horizontal snap) ────────────────────── */
+/* ── 8. HINT TEXT ────────────────────────────────────────────── */
+.gallery-hint {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  animation: hint-bob 3s ease-in-out infinite;
+  position: relative;
+  z-index: 10;
+}
+
+@keyframes hint-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(5px); }
+}
+
+/* ── 9. MOBILE GALLERY (horizontal snap) ─────────────────────── */
 .gallery-stage--mobile {
   height: auto;
-  min-height: 280px;
+  min-height: 0;
   max-height: none;
-  overflow: visible;
   background: transparent;
-  border: none;
-  box-shadow: none;
 }
-.gallery-stage--mobile::before { display: none; }
 
 .mob-gallery__track {
   display: flex;
-  gap: 1rem;
+  gap: 0.875rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  padding: 0.5rem 0 1.5rem;
+  padding: 0.5rem 1rem 1.5rem;
   scrollbar-width: none;
 }
 .mob-gallery__track::-webkit-scrollbar { display: none; }
 
 .mob-gallery__card {
-  flex: 0 0 75vw;
-  max-width: 320px;
+  flex: 0 0 72vw;
+  max-width: 300px;
   scroll-snap-align: center;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
-  background: var(--gallery-glass);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  background: var(--glass-bg, rgba(255,255,255,0.04));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   outline: none;
-  position: relative;
 }
 .mob-gallery__card:hover,
 .mob-gallery__card:focus-visible {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 16px 40px rgba(230,126,34, 0.15), 0 8px 24px rgba(0,0,0,0.25);
-  border-color: rgba(230,126,34, 0.4);
+  box-shadow: 0 12px 36px rgba(230,126,34, 0.15);
+  border-color: rgba(230,126,34, 0.35);
 }
 .mob-gallery__img {
   width: 100%;
@@ -203,7 +213,7 @@
   display: block;
 }
 
-/* ── 8. IMAGE VIEWER (fullscreen overlay) ───────────────────── */
+/* ── 10. IMAGE VIEWER ─────────────────────────────────────────── */
 .img-viewer {
   position: fixed;
   inset: 0;
@@ -215,25 +225,23 @@
 }
 .img-viewer[hidden] { display: none; }
 
-/* Backdrop — glass blur, NOT opaque, so dome shows through */
+/* Translucent glass backdrop — dome shows through subtly */
 .img-viewer__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(8, 10, 14, 0.72);
-  backdrop-filter: blur(18px) saturate(1.3);
-  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  background: rgba(4, 8, 16, 0.78);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.3s ease;
   pointer-events: none;
-  cursor: pointer;
 }
-
 .img-viewer--open .img-viewer__backdrop {
   opacity: 1;
   pointer-events: all;
+  cursor: pointer;
 }
 
-/* Image wrapper */
 .img-viewer__wrap {
   position: relative;
   z-index: 2;
@@ -242,13 +250,12 @@
   justify-content: center;
   gap: 1.5rem;
   max-width: min(92vw, 1100px);
-  max-height: 85vh;
-  pointer-events: none;
+  max-height: 88vh;
   opacity: 0;
-  transform: scale(0.88);
-  transition: opacity 0.35s var(--ease-out), transform 0.35s var(--ease-out);
+  transform: scale(0.9);
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  pointer-events: none;
 }
-
 .img-viewer--open .img-viewer__wrap {
   opacity: 1;
   transform: scale(1);
@@ -258,30 +265,27 @@
 .img-viewer__img {
   display: block;
   max-width: 100%;
-  max-height: 82vh;
+  max-height: 84vh;
   width: auto;
   height: auto;
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow:
-    0 0 0 1px rgba(230,126,34, 0.25),
-    0 0 60px rgba(230,126,34, 0.12),
-    0 40px 120px rgba(0,0,0,0.6);
+    0 0 0 1px rgba(230,126,34, 0.20),
+    0 0 50px rgba(230,126,34, 0.10),
+    0 40px 100px rgba(0,0,0,0.55);
   transition: opacity 0.15s ease, transform 0.15s ease;
-  will-change: opacity, transform;
 }
 
-/* Prev / Next arrows */
 .img-viewer__arrow {
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255, 0.15);
-  background: rgba(255,255,255, 0.07);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
   color: #fff;
-  font-size: 1.4rem;
-  line-height: 1;
+  font-size: 1.3rem;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
   display: flex;
@@ -289,74 +293,30 @@
   justify-content: center;
 }
 .img-viewer__arrow:hover {
-  background: rgba(230,126,34, 0.25);
-  border-color: rgba(230,126,34, 0.5);
-  transform: scale(1.12);
+  background: rgba(230,126,34, 0.22);
+  border-color: rgba(230,126,34, 0.45);
+  transform: scale(1.1);
 }
 .img-viewer__arrow[hidden] { visibility: hidden; }
 
-/* ── 9. THEME TOKENS ─────────────────────────────────────────── */
-/* Dark mode (default) */
-:root,
-[data-theme="dark"] {
-  --gallery-bg:          #06090f;
-  --gallery-glass:       rgba(255,255,255, 0.035);
-  --gallery-glow:        #E67E22;
-  --gallery-particle:    rgba(230,126,34, 0.5);
-  --gallery-placeholder: #101828;
-  --gallery-text:        #94A3B8;
-}
-
-/* Light mode */
-[data-theme="light"] {
-  --gallery-bg:          #f3f4f6;
-  --gallery-glass:       rgba(255,255,255, 0.75);
-  --gallery-glow:        #E67E22;
-  --gallery-particle:    rgba(140,100,60, 0.35);
-  --gallery-placeholder: #d4d8df;
-  --gallery-text:        #475569;
-}
-
-/* ── 10. SCROLL HINT ARROW ───────────────────────────────────── */
-.gallery-hint {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  margin-top: 1.5rem;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.6;
-  animation: hint-bob 2.5s ease-in-out infinite;
-}
-
-@keyframes hint-bob {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(5px); }
-}
-
-/* ── 11. RESPONSIVE ──────────────────────────────────────────── */
+/* ── 11. RESPONSIVE ───────────────────────────────────────────── */
 @media (max-width: 768px) {
   .gallery-stage {
-    height: 55vw;
-    min-height: 260px;
-    border-radius: 14px;
+    height: 52vw;
+    min-height: 240px;
   }
-  .img-viewer__arrow {
-    width: 36px;
-    height: 36px;
-    font-size: 1.1rem;
-  }
+  .gallery-dome-wrap::before,
+  .gallery-dome-wrap::after { width: 8%; }
+  .gallery-dome-wrap .gallery-fade-top,
+  .gallery-dome-wrap .gallery-fade-bot { height: 12%; }
 }
 
+/* ── 12. REDUCED MOTION ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .gallery-stage,
-  .gallery-section--visible .gallery-stage {
+  .gallery-stage {
     transition: none;
-    transform: none;
     opacity: 1;
+    transform: none;
   }
-  .gallery-stage::before { animation: none; }
-  .gallery-hint           { animation: none; }
+  .gallery-hint { animation: none; }
 }
